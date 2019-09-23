@@ -1,4 +1,6 @@
-﻿using System;
+﻿//Конструкторы класса
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -8,6 +10,16 @@ namespace Oblik
     public partial class Oblik : IOblik
     {
         //Конструкторы
+
+        /// <summary>
+        /// Конструктор класса
+        /// </summary>
+        /// <param name="port">Порт</param>
+        /// <param name="baudrate">Скорость соединения</param>
+        /// <param name="addr">Адрес счетчика в протоколе RS-485</param>
+        /// <param name="timeout">Время ожидания ответа</param>
+        /// <param name="repeats">Количество повторов при опросе</param>
+        /// <param name="password">Пароль</param>
         public Oblik(int port, int baudrate, int addr, int timeout, int repeats, string password)
         {
             _port = port;
@@ -28,7 +40,21 @@ namespace Oblik
             _user = 2;
             _CalcUnits = new CalcUnitsStruct();
         }
+
+        /// <summary>
+        /// Конструктор класса
+        /// </summary>
+        /// <param name="port">Порт</param>
+        /// <param name="addr">Адрес счетчика в протоколе RS-485</param>
+        /// <param name="timeout">Время ожидания ответа</param>
+        /// <param name="repeats">Количество повторов</param>
         public Oblik(int port, int addr, int timeout, int repeats) : this(port, 9600, addr, timeout, repeats, "") { }
+
+        /// <summary>
+        /// Конструктор класса
+        /// </summary>
+        /// <param name="port">Порт</param>
+        /// <param name="addr">Адрес счетчика в протоколе RS-485</param>
         public Oblik(int port, int addr) : this(port, 9600, addr, 500, 2, "") { }
     }
 }

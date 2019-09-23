@@ -1,16 +1,36 @@
-﻿using System;
+﻿//События класса
 
-
+using System;
 
 namespace Oblik
 {
     //Классы событий
-    public class ProgressEventArgs : EventArgs { public float progress; };     //Аргументы события прогресса данных
-    public class StatusChangeArgs : EventArgs                                                           
+
+    /// <summary>
+    /// Класс аргументов событий прогресса данных
+    /// </summary>
+    public class ProgressEventArgs : EventArgs
     {
+        /// <summary>
+        /// Прогресс в процентах
+        /// </summary>
+        public float progress;
+    }
+
+    /// <summary>
+    /// Класс аргументов событий изменения статуса
+    /// </summary>
+    public class StatusChangeArgs : EventArgs
+    {
+        /// <summary>
+        /// Сообщение
+        /// </summary>
         public string Message;
+        /// <summary>
+        /// Флаг ошибки
+        /// </summary>
         public bool Error;
-    };                                          //Аргументы события изменения статуса
+    }
 
     public partial class Oblik : IOblik
     {
@@ -18,26 +38,47 @@ namespace Oblik
         public delegate void Progress(object sender, ProgressEventArgs e);
         public delegate void StatusChange(object sender, StatusChangeArgs e);
 
-        //События класса
-        public event Progress OnProgress;               //Событие прогресса данных
-        public event StatusChange OnStatusChange;       //Событие изменения статуса
+        /// <summary>
+        /// Событие прогресса данных
+        /// </summary>
+        public event Progress OnProgress;
+
+        /// <summary>
+        /// Событие изменения статуса
+        /// </summary>
+        public event StatusChange OnStatusChange;
 
         //Генераторы событий
-        private void ChangeStatus(string message, bool error)      //Вызов события изменения статуса
+
+        /// <summary>
+        /// Вызов события изменения статуса
+        /// </summary>
+        /// <param name="message">Сообщение</param>
+        /// <param name="error">Флаг ошибки</param>
+        private void ChangeStatus(string message, bool error)
         {
-            StatusChangeArgs args = new StatusChangeArgs();
-            args.Message = message;
-            args.Error = error;
+            StatusChangeArgs args = new StatusChangeArgs
+            {
+                Message = message,
+                Error = error
+            };
             _isError = error;
             if (OnStatusChange != null)
             {
                 OnStatusChange(this, args);
             }
         }
-        private void SetProgress(float progress)                   //Вызов события прогресса
+
+        /// <summary>
+        /// Вызов события прогресса
+        /// </summary>
+        /// <param name="progress">Прогресс в процентах</param>
+        private void SetProgress(float progress)
         {
-            ProgressEventArgs args = new ProgressEventArgs();
-            args.progress = progress;
+            ProgressEventArgs args = new ProgressEventArgs
+            {
+                progress = progress
+            };
             if (OnProgress != null)
             {
                 OnProgress(this, args);

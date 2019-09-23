@@ -1,4 +1,6 @@
-﻿using System;
+﻿//Преобразователи данных
+
+using System;
 using System.IO;
 
 namespace Oblik
@@ -7,7 +9,13 @@ namespace Oblik
     {
         //Группа преобразователей массива байт в различные типы данных и наоборот. 
         //Принимается, что старший байт имеет младший адрес (big-endian)
-        private UInt32 ToUint32(byte[] array)                      //Преобразование массива байт в UInt32 
+
+        /// <summary>
+        /// Преобразование массива байт в UInt32
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns>Число UInt32</returns>
+        private UInt32 ToUint32(byte[] array)
         {
             MemoryStream stream = null;
             try
@@ -15,6 +23,7 @@ namespace Oblik
                 stream = new MemoryStream(array);
                 using (BinaryReader reader = new BinaryReader(stream))
                 {
+                    stream = null;
                     return reader.ReadUInt32();
                 }
             }
@@ -26,7 +35,13 @@ namespace Oblik
                 }
             }
         }
-        private byte[] UInt32ToByte(UInt32 data)                   //Преобразование UInt32 в массив байт
+
+        /// <summary>
+        /// Преобразование UInt32 в массив байт
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        private byte[] UInt32ToByte(UInt32 data)
         {
             byte[] res = new byte[sizeof(UInt32)];
             MemoryStream stream = null;
@@ -35,6 +50,7 @@ namespace Oblik
                 stream = new MemoryStream(res);
                 using (BinaryWriter writer = new BinaryWriter(stream))
                 {
+                    stream = null;
                     writer.Write(data);
                     return res;
                 }
@@ -47,7 +63,13 @@ namespace Oblik
                 }
             }
         }
-        private float ToFloat(byte[] array)                        //Преобразование массива байт в float
+
+        /// <summary>
+        /// Преобразование массива байт в float
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
+        private float ToFloat(byte[] array)
         {
             MemoryStream stream = null;
             try
@@ -55,6 +77,7 @@ namespace Oblik
                 stream = new MemoryStream(array);
                 using (BinaryReader reader = new BinaryReader(stream))
                 {
+                    stream = null;
                     return reader.ReadSingle();
                 }
             }
@@ -66,7 +89,13 @@ namespace Oblik
                 }
             }
         }
-        private byte[] FloatToByte(float data)                     //Преобразование float в массив байт
+
+        /// <summary>
+        /// Преобразование float в массив байт
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        private byte[] FloatToByte(float data)
         {
             byte[] res = new byte[sizeof(float)];
             MemoryStream stream = null;
@@ -75,6 +104,7 @@ namespace Oblik
                 stream = new MemoryStream(res);
                 using (BinaryWriter writer = new BinaryWriter(stream))
                 {
+                    stream = null;
                     writer.Write(data);
                     return res;
                 }
@@ -87,7 +117,13 @@ namespace Oblik
                 }
             }
         }
-        private UInt16 ToUint16(byte[] array)                      //Преобразование массива байт в word (оно же uint16)
+
+        /// <summary>
+        /// Преобразование массива байт в word (оно же uint16)
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
+        private UInt16 ToUint16(byte[] array)
         {
             MemoryStream stream = null;
             try
@@ -95,6 +131,7 @@ namespace Oblik
                 stream = new MemoryStream(array);
                 using (BinaryReader reader = new BinaryReader(stream))
                 {
+                    stream = null;
                     return reader.ReadUInt16();
                 }
             }
@@ -106,14 +143,26 @@ namespace Oblik
                 }
             }
         }
-        private byte[] UInt16ToByte(UInt16 data)                   //Преобразование word(UInt16) в массив байт
+
+        /// <summary>
+        /// Преобразование word(UInt16) в массив байт
+        /// </summary>
+        /// <param name="data"></param>
+        /// <returns></returns>
+        private byte[] UInt16ToByte(UInt16 data)
         {
             byte[] res = new byte[2];
             res[0] = (byte)((data & 0xFF00) >> 8);
             res[1] = (byte)(data & 0x00FF);
             return res;
         }
-        private DateTime ToUTCTime(byte[] array)                   //Преобразование массива байт в дату и время
+
+        /// <summary>
+        /// Преобразование массива байт в дату и время
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
+        private DateTime ToUTCTime(byte[] array)
         {
             UInt32 _ctime;  //Время по стандарту t_time
             DateTime BaseTime, Time;
@@ -122,7 +171,13 @@ namespace Oblik
             Time = BaseTime.AddSeconds(_ctime);
             return Time;
         }
-        private float ToUminiflo(byte[] array)                     //Преобразование массива байт в uminiflo 
+
+        /// <summary>
+        /// Преобразование массива байт в uminiflo 
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
+        private float ToUminiflo(byte[] array)
         {
             UInt16 _data = ToUint16(array);
             UInt16 man, exp;
@@ -132,7 +187,13 @@ namespace Oblik
             res = (float)System.Math.Pow(2, (exp - 15)) * (1 + man / 2048);     //Pow - возведение в степень
             return res;
         }
-        private float ToSminiflo(byte[] array)                     //Преобразование массива байт в sminiflo
+
+        /// <summary>
+        /// Преобразование массива байт в sminiflo
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
+        private float ToSminiflo(byte[] array)
         {
             UInt16 _data = ToUint16(array);
             UInt16 man, exp, sig;
@@ -143,7 +204,13 @@ namespace Oblik
             res = (float)(System.Math.Pow(2, (exp - 15)) * (1 + man / 2048) * System.Math.Pow(-1, sig));     //Pow - возведение в степень
             return res;
         }
-        private DayGraphRow ToDayGraphRow(byte[] array)            //Преобразование массива байт в строку суточного графика
+
+        /// <summary>
+        /// Преобразование массива байт в строку суточного графика
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
+        private DayGraphRow ToDayGraphRow(byte[] array)
         {
             DayGraphRow res = new DayGraphRow();
             byte[] _tmp = new byte[0];
@@ -179,7 +246,13 @@ namespace Oblik
             }
             return res;
         }
-        private byte[] ToTime(DateTime Date)                       //Преобразование DateTime в массив байт согласно t_time 
+
+        /// <summary>
+        /// Преобразование DateTime в массив байт согласно t_time
+        /// </summary>
+        /// <param name="Date"></param>
+        /// <returns></returns>
+        private byte[] ToTime(DateTime Date)
         {
             DateTime BaseTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);      //Базовая точка времени 01.01.1970 00:00 GMT
             UInt32 Time;                                                                  //Время по стандарту t_time
@@ -191,7 +264,13 @@ namespace Oblik
             Res[3] = (byte)(Time & 0xff);
             return Res;
         }
-        private CalcUnitsStruct ToCalcUnits(byte[] array)          //Преобразование массива байт в структуру параметров вычислений
+
+        /// <summary>
+        /// Преобразование массива байт в структуру параметров вычислений
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
+        private CalcUnitsStruct ToCalcUnits(byte[] array)
         {
             CalcUnitsStruct res = new CalcUnitsStruct();
             byte[] tmp = new byte[4];
@@ -268,7 +347,13 @@ namespace Oblik
 
             return res;
         }
-        private byte[] CalcUnitsToByte(CalcUnitsStruct CalcUnits)  //Преобразование структуры параметров вычислений в массив байт
+
+        /// <summary>
+        /// Преобразование структуры параметров вычислений в массив байт
+        /// </summary>
+        /// <param name="CalcUnits"></param>
+        /// <returns></returns>
+        private byte[] CalcUnitsToByte(CalcUnitsStruct CalcUnits)
         {
             byte[] res = new byte[57];
             int index = 0;
@@ -350,7 +435,13 @@ namespace Oblik
 
             return res;
         }
-        private CurrentValues ToCurrentValues(byte[] array)        //Преобразование массива байт в структуру текущих значений
+
+        /// <summary>
+        /// Преобразование массива байт в структуру текущих значений
+        /// </summary>
+        /// <param name="array"></param>
+        /// <returns></returns>
+        private CurrentValues ToCurrentValues(byte[] array)
         {
             CurrentValues res = new CurrentValues();
             byte[] tmp = new byte[2];
@@ -392,7 +483,6 @@ namespace Oblik
 
             Array.Copy(array, index, tmp, 0, 2);
             res.freq = ToUint16(tmp);
-            index += 2;
 
             return res;
         }

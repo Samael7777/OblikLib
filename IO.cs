@@ -1,4 +1,6 @@
-﻿using System;
+﻿//Обеспечение операций ввода/вывода
+
+using System;
 using System.IO.Ports;
 using System.Threading;
 
@@ -6,10 +8,16 @@ namespace Oblik
 {
     public partial class Oblik : IOblik
     {
-        
-        //Отправка запроса и получение данных Query - запрос, Answer - ответ
-        private void OblikQuery(byte[] Query, out byte[] Answer)
+
+        /// <summary>
+        /// Отправка запроса к счетчику и получение данных
+        /// </summary>
+        /// <param name="Query">Запрос к счетчику в формате массива L1</param>
+        /// <param name="Answer">Ответ счетчика в формате массива L1</param>
+        /// <return>Успех</return>>
+        private bool OblikQuery(byte[] Query, out byte[] Answer)
         {
+            bool success = true;                          //Флаг успеха операции
             object SerialIncoming = new object();         //Монитор таймаута чтения порта
             Answer = new byte[0];
             _isError = false;
@@ -29,7 +37,7 @@ namespace Oblik
                 Handshake = Handshake.None
             })
             {
-                // Событие чтения данных из порта
+                // Метод события чтения данных из порта
                 void DataReciever(object s, SerialDataReceivedEventArgs ea)
                 {
                     Array.Resize(ref _rbuf, com.BytesToRead);
@@ -39,16 +47,19 @@ namespace Oblik
                         Monitor.Pulse(SerialIncoming);
                     }
                 }
+
                 try
                 {
                     if (com.IsOpen) { com.Close(); }    //закрыть ранее открытый порт
                     com.Open();
+
                     //Отправка данных
                     com.DiscardOutBuffer();                                                                 //очистка буфера передачи
                     ChangeStatus("Отправка запроса", false);
                     com.DataReceived += new SerialDataReceivedEventHandler(DataReciever);                   //событие чтения из порта
                     com.Write(Query, 0, Query.Length);                                                      //отправка буфера записи
                     com.DiscardInBuffer();                                                                  //очистка буфера приема
+
                     //Получение ответа
                     int r = _repeats;
                     bool ReadOk = false;
@@ -73,10 +84,11 @@ namespace Oblik
                     }
                     if (!ReadOk)
                     {
+                        success = false;
                         ChangeStatus("Нет данных", true);
                     }
                     com.Close();        //Закрыть порт
-                    if (!_isError)
+                    if (success)
                     {
                         Array.Resize(ref Answer, _rbuf.Length);
                         Array.Copy(_rbuf, 0, Answer, 0, _rbuf.Length);
@@ -85,38 +97,40 @@ namespace Oblik
                 catch (Exception e)
                 {
                     ChangeStatus(e.Message, true);
+                    return false;
                 }
                 finally
                 {
                     Query = null;
                 }
+                return success;
             }
         }
 
-        /*
-       SegmentAccess
-       Доступ к данным в сегменте счетчика, возвращает количество прочитанных байт ответа счетчика или -1 в случае ошибки
-       data - данные для записи в сегмент, если запрос на чтение, то null
-       len - количество байт для записи / чтения
-       answ - полученные данные со счетчика (не обработанные)
-       AccType: 0 - чтение, 1 - запись 
-       */
-        private bool SegmentAccsess(byte segment, UInt16 offset, byte len, byte[] data, byte AccType)
+        /// <summary>
+        /// Доступ к данным в сегменте счетчика, результат записывается в структуры L1 и L2
+        /// </summary>
+        /// <param name="segment">Сегмент счетчика</param>
+        /// <param name="offset">Смещение относительно начала сегмента</param>
+        /// <param name="len">Количество данных на чтение/запись</param>
+        /// <param name="data">Массив данных для записи в сегмент, при чтении - null</param>
+        /// <param name="access">Тип доступа: 0 - на чтение, 1 - на запись</param>
+        /// <returns>Успех</returns>
+        private bool SegmentAccsess(byte segment, UInt16 offset, byte len, byte[] data, Access access)
         {
             byte[] _l1;                                                     //Посылка 1 уровня
             byte[] _l2;                                                     //Посылка 2 уровня
-            if (AccType != 0) { AccType = 1; }                              //Все, что больше 0 - команда на запись
-
+   
             //Формируем запрос L2
-            _l2 = new byte[5 + (len + 8) * AccType];                        //5 байт заголовка + 8 байт пароля + данные 
-            _l2[0] = (byte)((segment & 127) + AccType * 128);               //(биты 0 - 6 - номер сегмента, бит 7 = 1 - операция записи)
+            _l2 = new byte[5 + (len + 8) * (int)access];                        //5 байт заголовка + 8 байт пароля + данные 
+            _l2[0] = (byte)((segment & 127) + (int)access * 128);               //(биты 0 - 6 - номер сегмента, бит 7 = 1 - операция записи)
             _l2[1] = _user;                                                 //Указываем пользователя
             _l2[2] = (byte)(offset >> 8);                                   //Старший байт смещения
             _l2[3] = (byte)(offset & 0xff);                                 //Младший байт смещения
             _l2[4] = len;                                                   //Размер считываемых данных
 
             //Если команда - на запись в сегмент
-            if (AccType == 1)
+            if (access == Access.Write)
             {
                 Array.Copy(data, 0, _l2, 5, len);                               //Копируем данные в L2
                 Array.Copy(_passwd, 0, _l2, len + 5, 8);                        //Копируем пароль в L2
@@ -140,18 +154,24 @@ namespace Oblik
 
             //Обмен данными со счетчиком
             byte[] answer;
-            OblikQuery(_l1, out answer);
+            bool error = !OblikQuery(_l1, out answer);
 
             //Заполняем структуру ответа счетчика
-            if (!_isError)
+            if (!error)
             {
                 AnswerParser(answer);
             }
-            return _isError;
+            return error;
         }
-        
+
         //Методы обработки фреймов L1, L2
-        private string ParseL1error(int error)                     //Парсер ошибок L1
+
+        /// <summary>
+        /// Парсер ошибок L1
+        /// </summary>
+        /// <param name="error">Код ошибки L1</param>
+        /// <returns>Строка с текстом ошибки</returns>
+        private string ParseL1error(int error)
         {
             string res;
             switch (error)
@@ -171,7 +191,13 @@ namespace Oblik
             }
             return res;
         }
-        private string ParseL2error(int error)                     //Парсер ошибок L2
+
+        /// <summary>
+        /// Парсер ошибок L2
+        /// </summary>
+        /// <param name="error">Код ошибки L2</param>
+        /// <returns>Строка с текстом ошибки</returns>
+        private string ParseL2error(int error)
         {
             string res;
             switch (error)
@@ -218,7 +244,12 @@ namespace Oblik
             }
             return res;
         }
-        private void Encode(ref byte[] l2)                         //Процедура шифрования данных L2
+
+        /// <summary>
+        /// Процедура шифрования данных L2
+        /// </summary>
+        /// <param name="l2">Ссылка на массив L2</param>
+        private void Encode(ref byte[] l2)
         {
             //Шифрование полей "Данные" и "Пароль". Сперто из оригинальной процедуры шифрования
             byte _x1 = 0x3A;
@@ -234,7 +265,12 @@ namespace Oblik
                 _x1 += (byte)i;
             }
         }
-        private void AnswerParser(byte[] answer)                   //Парсер ответа счетчика
+
+        /// <summary>
+        /// Парсер ответа счетчика
+        /// </summary>
+        /// <param name="answer">Массив с ответом счетчика</param>
+        private void AnswerParser(byte[] answer)
         {
             L1Result = answer[0];
             L1ResultMsg = ParseL1error(L1Result);

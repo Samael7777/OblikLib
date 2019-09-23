@@ -1,18 +1,45 @@
-﻿using System;
+﻿//Структуры данных счетчика
+
+using System;
 
 namespace Oblik
 {
     //Структуры данных
-    public struct DayGraphRow                                               //Структура строки суточного графика
+    /// <summary>
+    /// Структура строки суточного графика
+    /// </summary>
+    public struct DayGraphRow
     {
-        public DateTime time;       //время записи
-        public float act_en_p;      //активная энергия "+" за период сохранения 
-        public float act_en_n;      //активная энергия "-" за период сохранения
-        public float rea_en_p;      //реактивная энергия "+" за период сохранения
-        public float rea_en_n;      //реактивная энергия "-" за период сохранения
-        public ushort[] channel;    //Количество импульсов по каналам
+        /// <summary>
+        /// Время записи
+        /// </summary>
+        public DateTime time;
+        /// <summary>
+        /// Активная энергия "+" за период сохранения
+        /// </summary>
+        public float act_en_p;
+        /// <summary>
+        /// Активная энергия "-" за период сохранения
+        /// </summary>
+        public float act_en_n;
+        /// <summary>
+        /// Реактивная энергия "+" за период сохранения
+        /// </summary>
+        public float rea_en_p;
+        /// <summary>
+        /// Реактивная энергия "-" за период сохранения
+        /// </summary>
+        public float rea_en_n;
+        /// <summary>
+        /// Количество импульсов по каналам
+        /// </summary>
+        public ushort[] channel;
     }
-    public struct CalcUnitsStruct                                           //Структура параметров вычислений
+
+    /// <summary>
+    /// Структура параметров вычислений
+    /// </summary>
+    public struct CalcUnitsStruct
     {
         public float
             ener_fct,
@@ -34,11 +61,19 @@ namespace Oblik
             volt_unit;
         public byte save_const;
     }
-    public struct FirmwareVer                                               //Структура версии ПО счетчика
+
+    /// <summary>
+    /// Структура версии ПО счетчика
+    /// </summary>
+    public struct FirmwareVer
     {
-        public int Version;     
+        public int Version;
         public int Build;
-    } 
+    }
+
+    /// <summary>
+    /// Структура текущих показателей
+    /// </summary>
     public struct CurrentValues
     {
         public float
