@@ -20,7 +20,6 @@ namespace Oblik
             bool success = true;                          //Флаг успеха операции
             object SerialIncoming = new object();         //Монитор таймаута чтения порта
             Answer = new byte[0];
-            _isError = false;
             byte[] _rbuf = new byte[0];                   //Буфер для чтения
             //Параметризация и открытие порта
             using (SerialPort com = new SerialPort

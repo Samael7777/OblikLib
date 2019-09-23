@@ -32,10 +32,6 @@ namespace Oblik
         /// </summary>
         private byte[] _passwd;
         /// <summary>
-        /// Флаг наличия ошибки
-        /// </summary>
-        private bool _isError;
-        /// <summary>
         /// Пользователь
         /// 0 - пользователь;
         /// 1 - администратор;

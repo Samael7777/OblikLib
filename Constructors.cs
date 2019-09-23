@@ -28,7 +28,6 @@ namespace Oblik
             _repeats = repeats;
             _baudrate = baudrate;
             _passwd = new byte[8];
-            _isError = false;
             if (password == "")
             {
                 for (int i = 0; i < 8; i++) { _passwd[i] = 0; }

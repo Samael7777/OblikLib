@@ -62,11 +62,7 @@ namespace Oblik
                 Message = message,
                 Error = error
             };
-            _isError = error;
-            if (OnStatusChange != null)
-            {
-                OnStatusChange(this, args);
-            }
+            OnStatusChange?.Invoke(this, args);
         }
 
         /// <summary>

@@ -38,8 +38,8 @@ namespace Oblik
             byte[] cmd = new byte[2];
             cmd[0] = (byte)~(_addr);
             cmd[1] = (byte)_addr;
-            SegmentAccsess(segment, offset, (byte)cmd.Length, cmd, Access.Write);
-            return _isError;
+            return SegmentAccsess(segment, offset, (byte)cmd.Length, cmd, Access.Write);
+            
         }
 
         /// <summary>
@@ -53,8 +53,7 @@ namespace Oblik
             DateTime CurrentTime = System.DateTime.Now.ToUniversalTime();        //Текущее время в формате UTC
             CurrentTime.AddSeconds(2);                                           //2 секунды на вычисление, отправку и т.д.
             byte[] Buf = ToTime(CurrentTime);
-            SegmentAccsess(segment, offset, (byte)Buf.Length, Buf, Access.Write);
-            return _isError;
+            return SegmentAccsess(segment, offset, (byte)Buf.Length, Buf, Access.Write);
         }
 
         /// <summary>
@@ -146,16 +145,17 @@ namespace Oblik
             const byte segment = 36;
             const UInt16 offset = 0;
             const byte len = 33;
-            SegmentAccsess(segment, offset, len, null, 0);
-            if (!_isError)
+          
+            if (SegmentAccsess(segment, offset, len, null, 0))
             {
                 values = ToCurrentValues(L2Data);
+                return true;
             }
             else
             {
                 values = new CurrentValues();
+                return false;
             }
-            return _isError;
         }
 
         /// <summary>
@@ -166,9 +166,9 @@ namespace Oblik
             byte segment = 56;                                      //Сегмент чтения параметров вычислений
             UInt16 offset = 0;
             byte len = 57;                                          //Размер данных сегмента
-            SegmentAccsess(segment, offset, len, null, Access.Read);
-            if (!_isError || (L2Data.Length != 57)) { return; }
-            _CalcUnits = ToCalcUnits(L2Data);
+            ;
+            if (SegmentAccsess(segment, offset, len, null, Access.Read))
+            { _CalcUnits = ToCalcUnits(L2Data); }
         }
 
         /// <summary>
