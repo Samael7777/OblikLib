@@ -3,12 +3,20 @@
 using System;
 using System.IO.Ports;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Oblik
 {
     public partial class Oblik : IOblik
     {
 
+
+        private async byte[] DataReciever (SerialPort com)
+        {
+            byte[] buffer = new byte[255];
+            Task<int> ReadDataTask = com.BaseStream.BeginRead(buffer, 0, 255);
+        }
+        
         /// <summary>
         /// Отправка запроса к счетчику и получение данных
         /// </summary>
@@ -37,7 +45,7 @@ namespace Oblik
             })
             {
                 // Метод события чтения данных из порта
-                void DataReciever(object s, SerialDataReceivedEventArgs ea)
+                void DataReciever(object sender, SerialDataReceivedEventArgs ea)
                 {
                     Array.Resize(ref _rbuf, com.BytesToRead);
                     com.Read(_rbuf, 0, _rbuf.Length);

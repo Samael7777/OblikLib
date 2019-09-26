@@ -75,10 +75,7 @@ namespace Oblik
             {
                 progress = progress
             };
-            if (OnProgress != null)
-            {
-                OnProgress(this, args);
-            }
+            OnProgress?.Invoke(this, args);
 
         }
     }
