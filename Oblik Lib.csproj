@@ -44,8 +44,6 @@
     <Compile Include="Converters.cs" />
     <Compile Include="IO.cs" />
     <Compile Include="Events.cs" />
-    <Compile Include="Interface.cs" />
-    <Compile Include="Locals.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties.cs" />
     <Compile Include="Segments.cs" />

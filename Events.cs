@@ -32,7 +32,7 @@ namespace Oblik
         public bool Error;
     }
 
-    public partial class Oblik : IOblik
+    public partial class Oblik
     {
         //Делегаты событий класса
         public delegate void Progress(object sender, ProgressEventArgs e);

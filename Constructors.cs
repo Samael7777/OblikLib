@@ -1,59 +1,52 @@
 ﻿//Конструкторы класса
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 namespace Oblik
 {
-    public partial class Oblik : IOblik
+    public partial class Oblik
     {
-        //Конструкторы
 
+        /// <summary>
+        /// Параметры соединения
+        /// </summary>
+        OblikConnection _ConParams;
+
+        /// <summary>
+        /// Параметры вычислений
+        /// </summary>
+        private CalcUnitsStruct _CalcUnits;
+
+        //Конструкторы
         /// <summary>
         /// Конструктор класса
         /// </summary>
-        /// <param name="port">Порт</param>
-        /// <param name="baudrate">Скорость соединения</param>
-        /// <param name="addr">Адрес счетчика в протоколе RS-485</param>
-        /// <param name="timeout">Время ожидания ответа</param>
-        /// <param name="repeats">Количество повторов при опросе</param>
-        /// <param name="password">Пароль</param>
-        public Oblik(int port, int baudrate, int addr, int timeout, int repeats, string password)
+        /// <param name="Connection">Параметры подключения</param>
+        public Oblik(OblikConnection Connection)
         {
-            _port = port;
-            _addr = addr;
-            _timeout = timeout;
-            _repeats = repeats;
-            _baudrate = baudrate;
-            _passwd = new byte[8];
-            if (password == "")
-            {
-                for (int i = 0; i < 8; i++) { _passwd[i] = 0; }
-            }
-            else
-            {
-                _passwd = Encoding.Default.GetBytes(password);
-            }
-            _user = 2;
             _CalcUnits = new CalcUnitsStruct();
+            _ConParams.AccessLevel = (Connection.AccessLevel != null) ? Connection.AccessLevel : AccessLevel.Energo;
+            _ConParams.Address = (Connection.Address != null) ? Connection.Address : 0x01;
+            _ConParams.Baudrate = (Connection.Baudrate != null) ? Connection.Baudrate : 9600;
+            _ConParams.Password = Connection.Password;
+            _ConParams.Port = (Connection.Port != null) ? Connection.Port : 1;
+            _ConParams.Repeats = (Connection.Repeats != null) ? Connection.Repeats : 5;
+            _ConParams.Timeout = (Connection.Timeout != null) ? Connection.Timeout : 2000;
         }
 
         /// <summary>
         /// Конструктор класса
         /// </summary>
-        /// <param name="port">Порт</param>
-        /// <param name="addr">Адрес счетчика в протоколе RS-485</param>
-        /// <param name="timeout">Время ожидания ответа</param>
-        /// <param name="repeats">Количество повторов</param>
-        public Oblik(int port, int addr, int timeout, int repeats) : this(port, 9600, addr, timeout, repeats, "") { }
-
-        /// <summary>
-        /// Конструктор класса
-        /// </summary>
-        /// <param name="port">Порт</param>
-        /// <param name="addr">Адрес счетчика в протоколе RS-485</param>
-        public Oblik(int port, int addr) : this(port, 9600, addr, 500, 2, "") { }
+        /// <param name="Port">Номер COM порта</param>
+        /// <param name="Address">Адрес счетчика в сети RS-485</param>
+        public Oblik(int Port, int Address) : this (
+            new OblikConnection
+            {
+            AccessLevel = AccessLevel.Energo,
+            Address = Address,
+            Baudrate = 9600,
+            Password = "",
+            Port = Port,
+            Repeats = 5,
+            Timeout = 2000
+            })   { }
     }
 }

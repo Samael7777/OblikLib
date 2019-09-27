@@ -5,7 +5,7 @@ using System.IO;
 
 namespace Oblik
 {
-    public partial class Oblik : IOblik
+    public partial class Oblik
     {
         //Группа преобразователей массива байт в различные типы данных и наоборот. 
         //Принимается, что старший байт имеет младший адрес (big-endian)

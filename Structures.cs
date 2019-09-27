@@ -87,4 +87,54 @@ namespace Oblik
             rea_pw;
         public UInt16 freq;
     }
+
+    /// <summary>
+    /// Уровень доступа
+    /// 0 - пользователь;
+    /// 1 - администратор;
+    /// 2 - энергонадзор; 
+    /// 3 - служебный пользователь.
+    /// </summary>
+    public enum AccessLevel
+    {
+        User = 0,
+        Admin = 1,
+        Energo = 2,
+        System = 3
+    }
+
+    /// <summary>
+    /// Структрура параметров соединения со счетчиком
+    /// </summary>
+    public struct OblikConnection
+    {
+        /// <summary>
+        /// Номер COM-порта
+        /// </summary>
+        public int? Port;
+        /// <summary>
+        /// Скорость соединения
+        /// </summary>
+        public int? Baudrate;
+        /// <summary>
+        /// Таймаут соединения
+        /// </summary>
+        public int? Timeout;
+        /// <summary>
+        /// Количество попыток соединения
+        /// </summary>
+        public int? Repeats;
+        /// <summary>
+        /// Адрес счетчика в сети RS-485
+        /// </summary>
+        public int? Address;
+        /// <summary>
+        /// Пароль от счетчика
+        /// </summary>
+        public string Password;
+        /// <summary>
+        /// Уровень доступа
+        /// </summary>
+        public AccessLevel? AccessLevel;
+    }
 }

@@ -6,40 +6,50 @@ using System.Collections.Generic;
 
 namespace Oblik
 {
-    public partial class Oblik : IOblik
+    public partial class Oblik
     {
         /// <summary>
         /// Получить количество строк суточного графика (сегмент #44)
         /// </summary>
         /// <returns>Количество строк суточного графика или -1 в случае ошибки</returns>
-        public int DayGraphRecs
+        public int DayGraphRecs()
         {
-            get
+            const byte segment = 44;
+            const ushort offset = 0;
+            const byte len = 2;
+            if (SegmentRead(segment, offset, len, out byte[] QueryResult))
             {
-                const byte segment = 44;
-                const ushort offset = 0;
-                if (SegmentAccsess(segment, offset, 2, null, Access.Read))
-                {
-                    //Порядок байт в счетчике - обратный по отношению к пк, переворачиваем
-                    return (int)(L2Data[0] + (int)(L2Data[1] << 8));
-                }
-                else return -1;
+                return ToUint16(QueryResult);
             }
+            return -1;
         }
 
         /// <summary>
         /// Очистка суточного графика (сегмент #88)
         /// </summary>
-        /// <returns>Успех</returns>
+        /// <returns>Успех операции</returns>
         public bool CleanDayGraph()
         {
             const byte segment = 88;
             const ushort offset = 0;
             byte[] cmd = new byte[2];
-            cmd[0] = (byte)~(_addr);
-            cmd[1] = (byte)_addr;
-            return SegmentAccsess(segment, offset, (byte)cmd.Length, cmd, Access.Write);
-            
+            cmd[0] = (byte)~(_ConParams.Address);
+            cmd[1] = (byte)_ConParams.Address;
+            return SegmentWrite(segment, offset, cmd);
+        }
+
+        /// <summary>
+        /// Очистка протокола событий (сегмент #89)
+        /// </summary>
+        /// <returns>Успех операции</returns>
+        public bool CleanEventsLog()
+        {
+            const byte segment = 89;
+            const ushort offset = 0;
+            byte[] cmd = new byte[2];
+            cmd[0] = (byte)~(_ConParams.Address);
+            cmd[1] = (byte)_ConParams.Address;
+            return SegmentWrite(segment, offset, cmd);
         }
 
         /// <summary>
@@ -50,10 +60,10 @@ namespace Oblik
         {
             const byte segment = 65;
             const ushort offset = 0;
-            DateTime CurrentTime = System.DateTime.Now.ToUniversalTime();        //Текущее время в формате UTC
-            CurrentTime.AddSeconds(2);                                           //2 секунды на вычисление, отправку и т.д.
+            DateTime CurrentTime = DateTime.Now.ToUniversalTime();          //Текущее время в формате UTC
+            CurrentTime.AddSeconds(2);                                      //2 секунды на вычисление, отправку и т.д.
             byte[] Buf = ToTime(CurrentTime);
-            return SegmentAccsess(segment, offset, (byte)Buf.Length, Buf, Access.Write);
+            return SegmentWrite(segment, offset, Buf);
         }
 
         /// <summary>
@@ -70,10 +80,10 @@ namespace Oblik
             const uint MaxReqLines = 8;                             //Максимальное количество строк в запросе
             const byte MaxReqBytes = (byte)(LineLen * MaxReqLines); //Максимальный размер запроса в байтах
             byte[] _buf;                                            //Буфер
-            uint TotalLines = (uint)DayGraphRecs;              //Количество строк суточного графика фактически в счетчике
+            int TotalLines = DayGraphRecs();                        //Количество строк суточного графика фактически в счетчике
 
             //Если запрос выходит за диапазон или нет строк для чтения, то выход
-            if ((TotalLines == 0) || ((lines + offset) > TotalLines))
+            if ((TotalLines <= 0) || ((lines + offset) > TotalLines))
             {
                 ChangeStatus("Нет записей для чтения", false);
                 SetProgress(100);
@@ -88,6 +98,7 @@ namespace Oblik
             uint LinesRead = 0;                                             //Счетчик считанных строк
             float Progress = 0;                                             //Прогресс выполнения операции
             float ProgressStep = (float)(100.0 / BytesReq);                 //Прогресс на 1 запрошенный байт
+            byte[] QueryResult;                                             //Данные от 1 запроса
             while (curroffs <= maxoffs)
             {
                 if (((BytesReq - curroffs) / MaxReqBytes) == 0)
@@ -95,12 +106,12 @@ namespace Oblik
                     bytestoread = (byte)((BytesReq - curroffs) % MaxReqBytes);
                 }
 
-                if (SegmentAccsess(segment, curroffs, bytestoread, null, Access.Read))
+                if (SegmentRead(segment, curroffs, bytestoread, out QueryResult))
                 {
                     Progress += ProgressStep * bytestoread;
                     SetProgress(Progress);                                      //Вызов события прогресса
                     Array.Resize(ref _buf, (int)(curroffs + LineLen));
-                    Array.Copy(L2Data, 0, _buf, curroffs, L2Data.Length);       //Результат считывания помещается в L2Data
+                    Array.Copy(QueryResult, 0, _buf, curroffs, QueryResult.Length);       //Результат считывания помещается в L2Data
                     curroffs += bytestoread;
                     LinesRead += bytestoread / LineLen;
                     //Получение из ответа структуры суточного графика
@@ -116,20 +127,20 @@ namespace Oblik
         }
 
         /// <summary>
-        /// Получить версию ПО счетчика (сегмент #44)
+        /// Получить версию ПО счетчика (сегмент #2)
         /// </summary>
-        /// <param name="fw">Структура версии ПО</param>
+        /// <param name="FirmwareVer">Структура версии ПО</param>
         /// <returns>Успех</returns>
-        public bool GetFWVersion(out FirmwareVer fw)
+        public bool GetFWVersion(out FirmwareVer FirmwareVer)
         {
-            fw = new FirmwareVer();
-            const byte segment = 44;
+            FirmwareVer = new FirmwareVer();
+            const byte segment = 2;
             const ushort offset = 0;
             const byte len = 2;
-            if (SegmentAccsess(segment, offset, len, null, Access.Read))
+            if (SegmentRead(segment, offset, len, out byte[] QueryResult))
             {
-                fw.Version = (int)L2Data[0];
-                fw.Build = (int)L2Data[1];
+                FirmwareVer.Version = (int)QueryResult[0];
+                FirmwareVer.Build = (int)QueryResult[1];
                 return true;
             }
             return false;
@@ -139,47 +150,47 @@ namespace Oblik
         /// Получить текущие (усредненные за 2 сек.) значения электроэнергии (сегмент #36)
         /// </summary>
         /// <param name="values">Структура текущих значений</param>
-        /// <returns>Успех</returns>
-        public bool GetCurrentValues(out CurrentValues values)
+        /// <returns>Успех операции</returns>
+        public bool GetCurrentValues(out CurrentValues Values)
         {
+            Values = new CurrentValues();
             const byte segment = 36;
             const UInt16 offset = 0;
             const byte len = 33;
-          
-            if (SegmentAccsess(segment, offset, len, null, 0))
+
+            if (!SegmentRead(segment, offset, len, out byte[] QueryResult))
             {
-                values = ToCurrentValues(L2Data);
-                return true;
-            }
-            else
-            {
-                values = new CurrentValues();
                 return false;
             }
+            Values = ToCurrentValues(QueryResult);
+            return true;
         }
 
         /// <summary>
         /// Получить параметры вычислений из счетчика (сегмент #56)
         /// </summary>
-        private void GetCalcUnits()
+        /// <returns>Успех операции</returns>
+        private bool GetCalcUnits()
         {
             byte segment = 56;                                      //Сегмент чтения параметров вычислений
             UInt16 offset = 0;
-            byte len = 57;                                          //Размер данных сегмента
-            ;
-            if (SegmentAccsess(segment, offset, len, null, Access.Read))
-            { _CalcUnits = ToCalcUnits(L2Data); }
+            byte len = 57;
+            if (!SegmentRead(segment, offset, len, out byte[] QueryResult)) { return false; }
+            _CalcUnits = ToCalcUnits(QueryResult);
+            return true;
         }
 
         /// <summary>
         /// //Записать параметры вычислений из свойства объекта в счетчик (сегмент #57)
         /// </summary>
-        private void SetCalcUnits()
+        /// <returns>Успех операции</returns>
+        private bool SetCalcUnits()
         {
             byte segment = 57;                                     //Сегмент чтения параметров вычислений
             UInt16 offset = 0;
             byte[] data = CalcUnitsToByte(_CalcUnits);
-            SegmentAccsess(segment, offset, (byte)data.Length, data, Access.Write);
+            if (!SegmentWrite(segment, offset, data)) { return false; }
+            return true;
         }
 
     }
