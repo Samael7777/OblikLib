@@ -1,10 +1,13 @@
 ﻿//Конструкторы класса
+using OblikControl.Resources;
+using System.Resources;
 
-namespace Oblik
+[assembly: NeutralResourcesLanguageAttribute("ru")]
+
+namespace OblikControl
 {
     public partial class Oblik
     {
-
         /// <summary>
         /// Параметры соединения
         /// </summary>
@@ -22,6 +25,11 @@ namespace Oblik
         /// <param name="Connection">Параметры подключения</param>
         public Oblik(OblikConnection Connection)
         {
+            //Заглушкии для событий
+            Dummy dummy = new Dummy();
+            OnProgress += dummy.DummyEventHandler;
+            OnStatusChange += dummy.DummyEventHandler;
+
             _CalcUnits = new CalcUnitsStruct();
             _ConParams.AccessLevel = (Connection.AccessLevel != null) ? Connection.AccessLevel : AccessLevel.Energo;
             _ConParams.Address = (Connection.Address != null) ? Connection.Address : 0x01;
@@ -37,16 +45,42 @@ namespace Oblik
         /// </summary>
         /// <param name="Port">Номер COM порта</param>
         /// <param name="Address">Адрес счетчика в сети RS-485</param>
-        public Oblik(int Port, int Address) : this (
+        public Oblik(int Port, int Address) : this(
             new OblikConnection
             {
-            AccessLevel = AccessLevel.Energo,
-            Address = Address,
-            Baudrate = 9600,
-            Password = "",
-            Port = Port,
-            Repeats = 5,
-            Timeout = 2000
-            })   { }
+                AccessLevel = AccessLevel.Energo,
+                Address = Address,
+                Baudrate = 9600,
+                Password = "",
+                Port = Port,
+                Repeats = 5,
+                Timeout = 2000
+            })
+        { }
+
+        public override string ToString()
+        {
+            if (!GetFWVersion(out FirmwareVer fw)) { return string.Empty; }
+            int v1 = (int)(fw.Version & 15);
+            int v2 = (int)(fw.Version & 240);
+            string text = string.Empty;
+            switch (v2)
+            {
+                case 0:
+                    text = StringsTable.CntrType1;
+                    break;
+                case 1:
+                    text = StringsTable.CntrType2;
+                    break;
+                case 2:
+                    text = StringsTable.CntrType3;
+                    break;
+                case 3:
+                    text = StringsTable.CntrType4;
+                    break;
+            }
+            text += $" V.{v1}.{fw.Build} mod.{v2} ";
+            return text;
+        }
     }
 }

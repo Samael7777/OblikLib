@@ -2,8 +2,9 @@
 
 using System;
 using System.IO;
+using System.Collections.Generic;
 
-namespace Oblik
+namespace OblikControl
 {
     public partial class Oblik
     {
@@ -15,8 +16,9 @@ namespace Oblik
         /// </summary>
         /// <param name="array"></param>
         /// <returns>Число UInt32</returns>
-        private UInt32 ToUint32(byte[] array)
+        private static UInt32 ToUint32(byte[] array)
         {
+            Array.Reverse(array);
             MemoryStream stream = null;
             try
             {
@@ -41,7 +43,7 @@ namespace Oblik
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        private byte[] UInt32ToByte(UInt32 data)
+        private static byte[] UInt32ToByte(UInt32 data)
         {
             byte[] res = new byte[sizeof(UInt32)];
             MemoryStream stream = null;
@@ -52,6 +54,7 @@ namespace Oblik
                 {
                     stream = null;
                     writer.Write(data);
+                    Array.Reverse(res);
                     return res;
                 }
             }
@@ -69,8 +72,9 @@ namespace Oblik
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        private float ToFloat(byte[] array)
+        private static float ToFloat(byte[] array)
         {
+            Array.Reverse(array);
             MemoryStream stream = null;
             try
             {
@@ -95,7 +99,7 @@ namespace Oblik
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        private byte[] FloatToByte(float data)
+        private static byte[] FloatToByte(float data)
         {
             byte[] res = new byte[sizeof(float)];
             MemoryStream stream = null;
@@ -106,6 +110,7 @@ namespace Oblik
                 {
                     stream = null;
                     writer.Write(data);
+                    Array.Reverse(res);
                     return res;
                 }
             }
@@ -123,8 +128,9 @@ namespace Oblik
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        private UInt16 ToUint16(byte[] array)
+        private static UInt16 ToUint16(byte[] array)
         {
+            Array.Reverse(array);
             MemoryStream stream = null;
             try
             {
@@ -149,7 +155,7 @@ namespace Oblik
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        private byte[] UInt16ToByte(UInt16 data)
+        private static byte[] UInt16ToByte(UInt16 data)
         {
             byte[] res = new byte[2];
             res[0] = (byte)((data & 0xFF00) >> 8);
@@ -162,14 +168,13 @@ namespace Oblik
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        private DateTime ToUTCTime(byte[] array)
+        private static DateTime ToUTCTime(byte[] array)
         {
             UInt32 _ctime;  //Время по стандарту t_time
-            DateTime BaseTime, Time;
+            DateTime BaseTime;
             BaseTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);       //Базовая точка времени 01.01.1970 00:00 GMT
             _ctime = ToUint32(array);                                             //Время в формате C (time_t) 
-            Time = BaseTime.AddSeconds(_ctime);
-            return Time;
+            return BaseTime.AddSeconds(_ctime);
         }
 
         /// <summary>
@@ -177,7 +182,7 @@ namespace Oblik
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        private float ToUminiflo(byte[] array)
+        private static float ToUminiflo(byte[] array)
         {
             UInt16 _data = ToUint16(array);
             UInt16 man, exp;
@@ -193,16 +198,13 @@ namespace Oblik
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        private float ToSminiflo(byte[] array)
+        private static float ToSminiflo(byte[] array)
         {
             UInt16 _data = ToUint16(array);
-            UInt16 man, exp, sig;
-            float res;
-            sig = (UInt16)(_data & (UInt16)1);                                  //Знак - бит 0
-            man = (UInt16)((_data & 0x7FE) >> 1);                               //Мантисса - биты 1-10
-            exp = (UInt16)((_data & 0xF800) >> 11);                             //Порядок - биты 11-15
-            res = (float)(System.Math.Pow(2, (exp - 15)) * (1 + man / 2048) * System.Math.Pow(-1, sig));     //Pow - возведение в степень
-            return res;
+            UInt16 sig = (UInt16)(_data & (UInt16)1);                                  //Знак - бит 0
+            UInt16 man = (UInt16)((_data & 0x7FE) >> 1);                               //Мантисса - биты 1-10
+            UInt16 exp = (UInt16)((_data & 0xF800) >> 11);                             //Порядок - биты 11-15
+            return (float)(Math.Pow(2, exp - 15) * (1 + (man / 2048)) * Math.Pow(-1, sig));     //Pow - возведение в степень
         }
 
         /// <summary>
@@ -210,38 +212,29 @@ namespace Oblik
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        private DayGraphRow ToDayGraphRow(byte[] array)
+        private static DayGraphRow ToDayGraphRow(byte[] array)
         {
             DayGraphRow res = new DayGraphRow();
-            byte[] _tmp = new byte[0];
             int index = 0;
             //time (4 байта)
-            Array.Resize(ref _tmp, 4);
-            Array.Copy(array, index, _tmp, 0, 4);
-            res.time = ToUTCTime(_tmp).ToLocalTime();
+            res.Time = ToUTCTime(ArrayPart(array, index, 4)).ToLocalTime();
             index += 4;
             //act_en_p (2 байта)
-            Array.Resize(ref _tmp, 2);
-            Array.Copy(array, index, _tmp, 0, 2);
-            res.act_en_p = ToUminiflo(_tmp);
+            res.Act_en_p = ToUminiflo(ArrayPart(array, index, 2));
             index += 2;
             //act_en_n (2 байта)
-            Array.Copy(array, index, _tmp, 0, 2);
-            res.act_en_n = ToUminiflo(_tmp);
+            res.Act_en_n = ToUminiflo(ArrayPart(array, index, 2));
             index += 2;
             //rea_en_p (2 байта)
-            Array.Copy(array, index, _tmp, 0, 2);
-            res.rea_en_p = ToUminiflo(_tmp);
+            res.Rea_en_p = ToUminiflo(ArrayPart(array, index, 2));
             index += 2;
             //rea_en_n (2 байта)
-            Array.Copy(array, index, _tmp, 0, 2);
-            res.rea_en_n = ToUminiflo(_tmp);
+            res.Rea_en_n = ToUminiflo(ArrayPart(array, index, 2));
             index += 2;
-            res.channel = new ushort[8];
-            for (int i = 0; i < 8; i++)
+            res.Channel = new int[8];
+            for (int i = 0; i <= 7; i++)
             {
-                Array.Copy(array, index, _tmp, 0, 2);
-                res.channel[i] = ToUint16(_tmp);
+                res.Channel[i] = (int)ToUint16(ArrayPart(array, index, sizeof(ushort)));
                 index += 2;
             }
             return res;
@@ -252,17 +245,11 @@ namespace Oblik
         /// </summary>
         /// <param name="Date"></param>
         /// <returns></returns>
-        private byte[] ToTime(DateTime Date)
+        private static byte[] ToTime(DateTime Date)
         {
             DateTime BaseTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);      //Базовая точка времени 01.01.1970 00:00 GMT
-            UInt32 Time;                                                                  //Время по стандарту t_time
-            byte[] Res = new byte[4];
-            Time = (UInt32)(Date - BaseTime).TotalSeconds;
-            Res[0] = (byte)((Time >> 24) & 0xff);
-            Res[1] = (byte)((Time >> 16) & 0xff);
-            Res[2] = (byte)((Time >> 8) & 0xff);
-            Res[3] = (byte)(Time & 0xff);
-            return Res;
+            UInt32 Time = (UInt32)(Date - BaseTime).TotalSeconds;
+            return UInt32ToByte(Time);
         }
 
         /// <summary>
@@ -270,80 +257,64 @@ namespace Oblik
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        private CalcUnitsStruct ToCalcUnits(byte[] array)
+        private static CalcUnitsStruct ToCalcUnits(byte[] array)
         {
             CalcUnitsStruct res = new CalcUnitsStruct();
-            byte[] tmp = new byte[4];
+
 
             int index = 0;
-            Array.Copy(array, index, tmp, 0, sizeof(float));
-            res.ener_fct = ToFloat(tmp);
+            res.Ener_fct = ToFloat(ArrayPart(array, index, sizeof(float)));
             index += sizeof(float);
 
-            Array.Copy(array, index, tmp, 0, sizeof(float));
-            res.powr_fct = ToFloat(tmp);
+            res.Powr_fct = ToFloat(ArrayPart(array, index, sizeof(float)));
             index += sizeof(float);
 
-            Array.Copy(array, index, tmp, 0, sizeof(float));
-            res.curr_fct = ToFloat(tmp);
+            res.Curr_fct = ToFloat(ArrayPart(array, index, sizeof(float)));
             index += sizeof(float);
 
-            Array.Copy(array, index, tmp, 0, sizeof(float));
-            res.volt_fct = ToFloat(tmp);
+            res.Volt_fct = ToFloat(ArrayPart(array, index, sizeof(float)));
             index += sizeof(float);
 
             //Reserved1
             index += sizeof(float);
 
-            Array.Resize(ref tmp, 1);
-            res.ener_unit = (sbyte)array[index];
+            res.Ener_unit = (sbyte)array[index];
             index++;
 
-            res.powr_unit = (sbyte)array[index];
+            res.Powr_unit = (sbyte)array[index];
             index++;
 
-            res.curr_unit = (sbyte)array[index];
+            res.Curr_unit = (sbyte)array[index];
             index++;
 
-            res.volt_unit = (sbyte)array[index];
+            res.Volt_unit = (sbyte)array[index];
             index++;
 
-            Array.Resize(ref tmp, 4);
-            Array.Copy(array, index, tmp, 0, sizeof(float));
-            res.curr_1w = ToFloat(tmp);
+            res.Curr_1w = ToFloat(ArrayPart(array, index, sizeof(float)));
             index += sizeof(float);
 
-            Array.Copy(array, index, tmp, 0, sizeof(float));
-            res.curr_2w = ToFloat(tmp);
+            res.Curr_2w = ToFloat(ArrayPart(array, index, sizeof(float)));
             index += sizeof(float);
 
-            Array.Copy(array, index, tmp, 0, sizeof(float));
-            res.volt_1w = ToFloat(tmp);
+            res.Volt_1w = ToFloat(ArrayPart(array, index, sizeof(float)));
             index += sizeof(float);
 
-            Array.Copy(array, index, tmp, 0, sizeof(float));
-            res.volt_2w = ToFloat(tmp);
+            res.Volt_2w = ToFloat(ArrayPart(array, index, sizeof(float)));
             index += sizeof(float);
 
-            Array.Resize(ref tmp, 1);
-            res.save_const = array[index];
+            res.Save_const = array[index];
             index++;
 
-            Array.Resize(ref tmp, 4);
-            Array.Copy(array, index, tmp, 0, sizeof(float));
-            res.pwr_lim_A = ToFloat(tmp);
+            res.Pwr_lim_A = ToFloat(ArrayPart(array, index, sizeof(float)));
             index += sizeof(float);
 
-            Array.Copy(array, index, tmp, 0, sizeof(float));
-            res.pwr_lim_B = ToFloat(tmp);
+            res.Pwr_lim_B = ToFloat(ArrayPart(array, index, sizeof(float)));
             index += sizeof(float);
 
-            Array.Copy(array, index, tmp, 0, sizeof(float));
-            res.pwr_lim_C = ToFloat(tmp);
+            res.Pwr_lim_C = ToFloat(ArrayPart(array, index, sizeof(float)));
             index += sizeof(float);
 
-            Array.Copy(array, index, tmp, 0, sizeof(float));
-            res.pwr_lim_D = ToFloat(tmp);
+            res.Pwr_lim_D = ToFloat(ArrayPart(array, index, sizeof(float)));
 
             return res;
         }
@@ -353,85 +324,67 @@ namespace Oblik
         /// </summary>
         /// <param name="CalcUnits"></param>
         /// <returns></returns>
-        private byte[] CalcUnitsToByte(CalcUnitsStruct CalcUnits)
+        private static byte[] CalcUnitsToByte(CalcUnitsStruct CalcUnits)
         {
             byte[] res = new byte[57];
             int index = 0;
-            byte[] tmp;
 
-            tmp = FloatToByte(CalcUnits.ener_fct);
-            Array.Copy(tmp, 0, res, index, sizeof(float));
+            FloatToByte(CalcUnits.Ener_fct).CopyTo(res, index);
             index += sizeof(float);
 
-            tmp = FloatToByte(CalcUnits.ener_fct);
-            Array.Copy(tmp, 0, res, index, sizeof(float));
+            FloatToByte(CalcUnits.Powr_fct).CopyTo(res, index);
             index += sizeof(float);
 
-            tmp = FloatToByte(CalcUnits.powr_fct);
-            Array.Copy(tmp, 0, res, index, sizeof(float));
+            FloatToByte(CalcUnits.Curr_fct).CopyTo(res, index);
             index += sizeof(float);
 
-            tmp = FloatToByte(CalcUnits.curr_fct);
-            Array.Copy(tmp, 0, res, index, sizeof(float));
-            index += sizeof(float);
-
-            tmp = FloatToByte(CalcUnits.volt_fct);
-            Array.Copy(tmp, 0, res, index, sizeof(float));
+            FloatToByte(CalcUnits.Volt_fct).CopyTo(res, index);
             index += sizeof(float);
 
             //reserved1
-            tmp[0] = 0;
-            tmp[1] = 0;
-            tmp[2] = 0;
-            tmp[3] = 0;
-            Array.Copy(tmp, 0, res, index, sizeof(float));
-            index += sizeof(float);
+            for (int i = 0; i <= 3; i++)
+            {
+                res[index] = 0;
+                index++;
+            }
 
-            res[index] = (byte)(CalcUnits.ener_unit);
+            res[index] = (byte)(CalcUnits.Ener_unit);
             index++;
 
-            res[index] = (byte)(CalcUnits.powr_unit);
+            res[index] = (byte)(CalcUnits.Powr_unit);
             index++;
 
-            res[index] = (byte)(CalcUnits.curr_unit);
+            res[index] = (byte)(CalcUnits.Curr_unit);
             index++;
 
-            res[index] = (byte)(CalcUnits.volt_unit);
+            res[index] = (byte)(CalcUnits.Volt_unit);
             index++;
 
-            tmp = FloatToByte(CalcUnits.curr_1w);
-            Array.Copy(tmp, 0, res, index, sizeof(float));
+            FloatToByte(CalcUnits.Curr_1w).CopyTo(res, index);
             index += sizeof(float);
 
-            tmp = FloatToByte(CalcUnits.curr_2w);
-            Array.Copy(tmp, 0, res, index, sizeof(float));
+            FloatToByte(CalcUnits.Curr_2w).CopyTo(res, index);
             index += sizeof(float);
 
-            tmp = FloatToByte(CalcUnits.volt_1w);
-            Array.Copy(tmp, 0, res, index, sizeof(float));
+            FloatToByte(CalcUnits.Volt_1w).CopyTo(res, index);
             index += sizeof(float);
 
-            tmp = FloatToByte(CalcUnits.volt_2w);
-            Array.Copy(tmp, 0, res, index, sizeof(float));
+            FloatToByte(CalcUnits.Volt_2w).CopyTo(res, index);
             index += sizeof(float);
 
-            res[index] = CalcUnits.save_const;
+            res[index] = CalcUnits.Save_const;
             index++;
 
-            tmp = FloatToByte(CalcUnits.pwr_lim_A);
-            Array.Copy(tmp, 0, res, index, sizeof(float));
+            FloatToByte(CalcUnits.Pwr_lim_A).CopyTo(res, index);
             index += sizeof(float);
 
-            tmp = FloatToByte(CalcUnits.pwr_lim_B);
-            Array.Copy(tmp, 0, res, index, sizeof(float));
+            FloatToByte(CalcUnits.Pwr_lim_B).CopyTo(res, index);
             index += sizeof(float);
 
-            tmp = FloatToByte(CalcUnits.pwr_lim_C);
-            Array.Copy(tmp, 0, res, index, sizeof(float));
+            FloatToByte(CalcUnits.Pwr_lim_C).CopyTo(res, index);
             index += sizeof(float);
 
-            tmp = FloatToByte(CalcUnits.pwr_lim_D);
-            Array.Copy(tmp, 0, res, index, sizeof(float));
+            FloatToByte(CalcUnits.Pwr_lim_D).CopyTo(res, index);
 
             return res;
         }
@@ -441,49 +394,71 @@ namespace Oblik
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        private CurrentValues ToCurrentValues(byte[] array)
+        private static CurrentValues ToCurrentValues(byte[] array)
         {
             CurrentValues res = new CurrentValues();
-            byte[] tmp = new byte[2];
+            
             int index = 0;
-            Array.Copy(array, index, tmp, 0, 2);
-            res.curr1 = ToUminiflo(tmp);
+            res.Curr1 = ToUminiflo(ArrayPart(array, index, 2));
             index += 2;
 
-            Array.Copy(array, index, tmp, 0, 2);
-            res.curr2 = ToUminiflo(tmp);
+            res.Curr2 = ToUminiflo(ArrayPart(array, index, 2));
             index += 2;
 
-            Array.Copy(array, index, tmp, 0, 2);
-            res.curr3 = ToUminiflo(tmp);
+            res.Curr3 = ToUminiflo(ArrayPart(array, index, 2));
             index += 2;
 
-            Array.Copy(array, index, tmp, 0, 2);
-            res.volt1 = ToUminiflo(tmp);
+            res.Volt1 = ToUminiflo(ArrayPart(array, index, 2));
             index += 2;
 
-            Array.Copy(array, index, tmp, 0, 2);
-            res.volt2 = ToUminiflo(tmp);
+            res.Volt2 = ToUminiflo(ArrayPart(array, index, 2));
             index += 2;
 
-            Array.Copy(array, index, tmp, 0, 2);
-            res.volt3 = ToUminiflo(tmp);
+            res.Volt3 = ToUminiflo(ArrayPart(array, index, 2));
             index += 2;
 
-            Array.Copy(array, index, tmp, 0, 2);
-            res.act_pw = ToSminiflo(tmp);
+            res.Act_pw = ToSminiflo(ArrayPart(array, index, 2));
             index += 2;
 
-            Array.Copy(array, index, tmp, 0, 2);
-            res.rea_pw = ToSminiflo(tmp);
+            res.Rea_pw = ToSminiflo(ArrayPart(array, index, 2));
             index += 2;
 
             //Reserved1
             index += 2;
 
-            Array.Copy(array, index, tmp, 0, 2);
-            res.freq = ToUint16(tmp);
+            res.Freq = ToUint16(ArrayPart(array, index, 2));
 
+            return res;
+        }
+
+        /// <summary>
+        /// Преобразовывает массив байт в запись карты сегментов
+        /// </summary>
+        /// <param name="array">Исходный массив</param>
+        /// <returns></returns>
+        private static SegmentsMapRec ToSegmentsMapRec(byte[] array)
+        {
+            SegmentsMapRec res = new SegmentsMapRec
+            {
+                Num = array[0],
+                Right = (byte)(array[1] & 15),
+                Accsess = (array[1] & 128) >> 7,
+                Size = ToUint16(ArrayPart(array, 2, 2))
+            };
+            return res;
+        }
+
+        /// <summary>
+        /// Отдает массив заданной длины, начинающийся с заданного индекса исходного массива
+        /// </summary>
+        /// <param name="array">Источник</param>
+        /// <param name="StartIndex">Начальный индекс</param>
+        /// <param name="Lenght">Длина</param>
+        /// <returns></returns>
+        private static byte[] ArrayPart(byte[] array, int StartIndex, int Lenght)
+        {
+            byte[] res = new byte[Lenght];
+            Array.Copy(array, StartIndex, res, 0, Lenght);
             return res;
         }
     }

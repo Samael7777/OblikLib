@@ -3,9 +3,10 @@
 using System;
 using System.IO.Ports;
 using System.Text;
-using System.Threading;
+using OblikControl.Resources;
 
-namespace Oblik
+
+namespace OblikControl
 {
     public partial class Oblik
     {
@@ -22,6 +23,46 @@ namespace Oblik
         }
 
         /// <summary>
+        /// Возвращает количество миллисекунд для данного экземпляра
+        /// </summary>
+        /// <returns>Количество миллисекунд для данного экземпляра</returns>
+        private static ulong GetTickCount()
+        {
+            return (ulong)DateTime.Now.Ticks / TimeSpan.TicksPerMillisecond;
+        }
+
+        /// <summary>
+        /// Чтение данных из порта
+        /// </summary>
+        /// <param name="sp">Ссылка на порт</param>
+        /// <param name="Timeout">Таймаут</param>
+        /// <param name="BytesToRead">Количество байт для чтения</param>
+        /// <param name="buffer">Буфер для считанных данных</param>
+        private void ReadAnswer(SerialPort sp, int Timeout, int BytesToRead, out byte[] buffer)
+        {
+            int BytesGet;
+            int count = BytesToRead;
+            int offset = 0;
+            buffer = new byte[BytesToRead];
+            ulong start = GetTickCount();
+            while (offset < BytesToRead)
+            {
+                if ((GetTickCount() - start) > (ulong)Timeout) { throw new Exception(StringsTable.Timeout); }
+                try
+                {
+                    BytesGet = (byte)sp.Read(buffer, offset, count);
+                }
+                catch
+                {
+                    BytesGet = 0;
+                }
+                count -= BytesGet;
+                offset += BytesGet;
+            }
+            if (offset != BytesToRead) { throw new Exception(StringsTable.ReadError); }
+        }
+
+        /// <summary>
         /// Отправка запроса к счетчику и получение данных
         /// </summary>
         /// <param name="Query">Запрос к счетчику в формате массива L1</param>
@@ -29,93 +70,79 @@ namespace Oblik
         /// <return>Успех</return>>
         private bool OblikQuery(byte[] Query, out byte[] Answer)
         {
-            bool success = true;                          //Флаг успеха операции
-            object SerialIncoming = new object();         //Монитор таймаута чтения порта
-            Answer = new byte[0];
-            byte[] _rbuf = new byte[0];                   //Буфер для чтения
-            //Параметризация и открытие порта
-            using (SerialPort com = new SerialPort
+            bool success = false;           //Флаг успеха операции
+            SerialPort com = null;
+            try
             {
-                PortName = "COM" + _ConParams.Port.ToString(),
-                BaudRate = _ConParams.Baudrate.Value,
-                Parity = Parity.None,
-                DataBits = 8,
-                StopBits = StopBits.One,
-                ReadTimeout = _ConParams.Timeout.Value,
-                WriteTimeout = _ConParams.Timeout.Value,
-                DtrEnable = false,
-                RtsEnable = false,
-                Handshake = Handshake.None
-            })
-            {
-                // Метод события чтения данных из порта
-                void DataReciever(object sender, SerialDataReceivedEventArgs ea)
+                com = new SerialPort
                 {
-                    Array.Resize(ref _rbuf, com.BytesToRead);
-                    com.Read(_rbuf, 0, _rbuf.Length);
-                    lock (SerialIncoming)
-                    {
-                        Monitor.Pulse(SerialIncoming);
-                    }
-                }
-
+                    PortName = "COM" + _ConParams.Port.ToString(),
+                    BaudRate = _ConParams.Baudrate.Value,
+                    Parity = Parity.None,
+                    DataBits = 8,
+                    StopBits = StopBits.One,
+                    ReadTimeout = 500,
+                    WriteTimeout = 500,
+                    DtrEnable = false,
+                    RtsEnable = false,
+                    Handshake = Handshake.None
+                };
+                Answer = null;
                 try
                 {
-                    if (com.IsOpen) { com.Close(); }    //закрыть ранее открытый порт
                     com.Open();
-
-                    //Отправка данных
-                    com.DiscardOutBuffer();                                                                 //очистка буфера передачи
-                    ChangeStatus("Отправка запроса", false);
-                    com.DataReceived += new SerialDataReceivedEventHandler(DataReciever);                   //событие чтения из порта
-                    com.Write(Query, 0, Query.Length);                                                      //отправка буфера записи
-                    com.DiscardInBuffer();                                                                  //очистка буфера приема
-
-                    //Получение ответа
-                    int r = _ConParams.Repeats.Value;
-                    bool ReadOk = false;
-                    ChangeStatus("Ожидание ответа...", false);
-                    while (r > 0)   //Повтор при ошибке
-                    {
-                        lock (SerialIncoming)
-                        {
-                            if (!Monitor.Wait(SerialIncoming, _ConParams.Timeout.Value))
-                            {
-                                //Если таймаут
-                                ChangeStatus("Timeout", false);
-                                r--;
-                            }
-                            else
-                            {
-                                r = 0;
-                                ReadOk = true;
-                                ChangeStatus("Данные получены", false);
-                            }
-                        }
-                    }
-                    if (!ReadOk)
-                    {
-                        success = false;
-                        ChangeStatus("Нет данных", true);
-                    }
-                    com.Close();        //Закрыть порт
-                    if (success)
-                    {
-                        Array.Resize(ref Answer, _rbuf.Length);
-                        Array.Copy(_rbuf, 0, Answer, 0, _rbuf.Length);
-                    }
                 }
                 catch (Exception e)
                 {
                     ChangeStatus(e.Message, true);
                     return false;
                 }
-                finally
+                int r = _ConParams.Repeats.Value;
+                ChangeStatus(StringsTable.SendReq, false);
+                while ((r > 0) && (!success))   //Повтор при ошибке
                 {
-                    Query = null;
+                    com.DiscardOutBuffer();                                                                 //очистка буфера передачи
+                    com.DiscardInBuffer();                                                                  //очистка буфера приема
+                    try
+                    {
+                        com.Write(Query, 0, Query.Length);
+                    }                                              
+                    catch (Exception e)
+                    {
+                        ChangeStatus(e.Message, true);
+                        return false;
+                    }
+                    try
+                    {
+                        Answer = new byte[2];
+                        r--;
+                        //Получение результата L1
+                        ReadAnswer(com, _ConParams.Timeout.Value, 1, out byte[] ReadBuffer);
+                        Answer[0] = ReadBuffer[0];
+                        if (Answer[0] != 1) { throw new Exception(ParseChannelError(Answer[0])); }
+                        //Получение количества байт в ответе
+                        ReadAnswer(com, _ConParams.Timeout.Value, 1, out ReadBuffer);
+                        Answer[1] = ReadBuffer[0];
+                        int len = ReadBuffer[0] + 1;
+                        Array.Resize(ref Answer, len + 2);
+                        //Получение всего ответа
+                        ReadAnswer(com, (int)(_ConParams.Timeout.Value / 5u), len, out ReadBuffer);
+                        ReadBuffer.CopyTo(Answer, 2);
+                        success = (ReadBuffer.Length == len);
+                        ChangeStatus(ParseSegmenterror(Answer[2]),false);
+                    }
+                    catch (Exception e)
+                    {
+                        success = false;
+                        ChangeStatus(e.Message, false);
+                    }
                 }
-                return success;
             }
+            finally
+            {
+                if (com != null) { com.Dispose(); }
+            }
+            return success;
         }
 
         /// <summary>
@@ -127,20 +154,21 @@ namespace Oblik
         /// <param name="Data">Данные для записи</param>
         /// <param name="Access">Доступ на запись или чтение</param>
         /// <returns></returns>
-        private byte[] PerformHeaders(byte Segment, UInt16 Offset, byte Len, Access Access, byte[] Data = null)
+        private byte[] PerformFrame(byte Segment, UInt16 Offset, byte Len, Access Access, byte[] Data = null)
         {
             byte[] _l1;                                                     //Посылка 1 уровня
             byte[] _l2;                                                     //Посылка 2 уровня
             byte[] _pwdarray = new byte[8];                                 //Пароль к счетчику
-            for (int i = 0; i < 8; i++) { _pwdarray[i] = 0; }
-            _pwdarray = Encoding.Default.GetBytes(_ConParams.Password);
-
+            if (_ConParams.Password != null)
+            {
+                _pwdarray = Encoding.Default.GetBytes(_ConParams.Password);
+            }
             //Формируем запрос L2
             _l2 = new byte[5 + (Len + 8) * (int)Access];                    //5 байт заголовка + 8 байт пароля + данные 
             _l2[0] = (byte)((Segment & 127) + (int)Access * 128);           //(биты 0 - 6 - номер сегмента, бит 7 = 1 - операция записи)
             _l2[1] = (byte)_ConParams.AccessLevel.Value;                    //Указываем уровень доступа
-            _l2[2] = (byte)(Offset >> 8);                                   //Старший байт смещения
-            _l2[3] = (byte)(Offset & 0xff);                                 //Младший байт смещения
+            _l2[2] = BitConverter.GetBytes(Offset)[1];                      //Старший байт смещения
+            _l2[3] = BitConverter.GetBytes(Offset)[0];                      //Младший байт смещения
             _l2[4] = Len;                                                   //Размер считываемых данных
 
             if (Access == Access.Write)
@@ -179,12 +207,10 @@ namespace Oblik
         public bool SegmentRead(byte Segment, UInt16 Offset, byte Len, out byte[] Data)
         {
             Data = null;
-            byte[] answer;
-            byte[] Query = PerformHeaders(Segment, Offset, Len, Access.Read);
-            if (!OblikQuery(Query, out answer)) { return false; }
+            byte[] Query = PerformFrame(Segment, Offset, Len, Access.Read);
+            if (!OblikQuery(Query, out byte[] answer)) { return false; }
             if (!CheckAnswer(answer)) { return false; }
-            Data = new byte[(answer.Length - 5)];
-            Array.Copy(answer, 4, Data, 0, Data.Length);
+            Data = ArrayPart(answer, 4, answer.Length - 5);
             return true;
         }
 
@@ -197,9 +223,13 @@ namespace Oblik
         /// <returns>Успех операции</returns>
         public bool SegmentWrite(byte Segment, UInt16 Offset, byte[] Data)
         {
-            byte[] answer;
-            byte[] Query = PerformHeaders(Segment, Offset, (byte)Data.Length, Access.Write, Data);
-            if (!OblikQuery(Query, out answer)) { return false; }
+            if (Data == null)
+            {
+                ChangeStatus(StringsTable.DataError, true);
+                return false;
+            }
+            byte[] Query = PerformFrame(Segment, Offset, (byte)Data.Length, Access.Write, Data);
+            if (!OblikQuery(Query, out byte[] answer)) { return false; }
             if (!CheckAnswer(answer)) { return false; }
             return true;
         }
@@ -212,22 +242,22 @@ namespace Oblik
         /// </summary>
         /// <param name="error">Код ошибки L1</param>
         /// <returns>Строка с текстом ошибки</returns>
-        private string ParseL1error(int error)
+        private static string ParseChannelError(int error)
         {
             string res;
             switch (error)
             {
                 case 1:
-                    res = "Успешное выполнение запроса";
+                    res = StringsTable.L1OK;
                     break;
                 case 0xff:
-                    res = "Ошибка контрольной суммы";
+                    res = StringsTable.L1CSCError;
                     break;
                 case 0xfe:
-                    res = "Переполнение входного буфера счетчика";
+                    res = StringsTable.L1Overflow;
                     break;
                 default:
-                    res = "Неизвестная ошибка";
+                    res = StringsTable.L1Unk;
                     break;
             }
             return res;
@@ -238,61 +268,60 @@ namespace Oblik
         /// </summary>
         /// <param name="error">Код ошибки L2</param>
         /// <returns>Строка с текстом ошибки</returns>
-        private string ParseL2error(int error)
+        private static string ParseSegmenterror(int error)
         {
             string res;
             switch (error)
             {
                 case 0:
-                    res = "Успешное выполнение операции";
+                    res = StringsTable.L2Err00;
                     break;
                 case 0xff:
-                    res = "Некорректный запрос (содержит менее 5 байт)";
+                    res = StringsTable.L2ErrFF;
                     break;
                 case 0xfe:
-                    res = "Неправильный идентификатор сегмента";
+                    res = StringsTable.L2ErrFE;
                     break;
                 case 0xfd:
-                    res = "Некорректная операция (Попытка записи в сегмент чтения и наоборот)";
+                    res = StringsTable.L2ErrFD;
                     break;
                 case 0xfc:
-                    res = "Неправильно задан уровень пользователя";
+                    res = StringsTable.L2ErrFC;
                     break;
                 case 0xfb:
-                    res = "Нет права доступа к данным";
+                    res = StringsTable.L2ErrFB;
                     break;
                 case 0xfa:
-                    res = "Неправильно задано смещение";
+                    res = StringsTable.L2ErrFA;
                     break;
                 case 0xf9:
-                    res = "Неправильный запрос на запись (несоответствие запрашиваемой и действительной длины данных)";
+                    res = StringsTable.L2ErrF9;
                     break;
                 case 0xf8:
-                    res = "Длина данных задана равной 0";
+                    res = StringsTable.L2ErrF8;
                     break;
                 case 0xf7:
-                    res = "Неправильный пароль";
+                    res = StringsTable.L2ErrF7;
                     break;
                 case 0xf6:
-                    res = "Неправильно задана команда стирания графиков";
+                    res = StringsTable.L2ErrF6;
                     break;
                 case 0xf5:
-                    res = "Запрещена смена пароля";
+                    res = StringsTable.L2ErrF5;
                     break;
                 default:
-                    res = "Неизвестная ошибка";
+                    res = StringsTable.L2ErrUnk;
                     break;
             }
             return res;
         }
-
 
         /// <summary>
         /// Процедура шифрования данных L2
         /// </summary>
         /// <param name="l2">Ссылка на массив L2</param>
         /// <param name="passwd">Пароль</param>
-        private void Encode(ref byte[] l2, byte[] passwd)
+        private static void Encode(ref byte[] l2, byte[] passwd)
         {
             //Шифрование полей "Данные" и "Пароль". Сперто из оригинальной процедуры шифрования
             byte _x1 = 0x3A;
@@ -318,16 +347,15 @@ namespace Oblik
         private bool CheckAnswer(byte[] answer)
         {
             int L1Result = answer[0];
-            string L1ResultMsg = ParseL1error(L1Result);
+            string L1ResultMsg = ParseChannelError(L1Result);
             if (L1Result != 1)
             {
                 ChangeStatus(L1ResultMsg, true);
                 return false;
             }
             ChangeStatus(L1ResultMsg, false);
-            int L1Lenght = answer[1];
             int L2Result = answer[2];
-            string L2ResultMsg = ParseL2error(L2Result);
+            string L2ResultMsg = ParseSegmenterror(L2Result);
             if (L2Result != 0)
             {
                 ChangeStatus(L2ResultMsg, true);
@@ -341,12 +369,11 @@ namespace Oblik
             }
             if (cs != 0)
             {
-                ChangeStatus("Ошибка контрольной суммы", true);
+                ChangeStatus(StringsTable.CSCError, true);
                 return false;
             }
             ChangeStatus(L2ResultMsg, false);
             return true;
         }
-
     }
 }

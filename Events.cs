@@ -2,7 +2,7 @@
 
 using System;
 
-namespace Oblik
+namespace OblikControl
 {
     //Классы событий
 
@@ -11,42 +11,47 @@ namespace Oblik
     /// </summary>
     public class ProgressEventArgs : EventArgs
     {
+        private float progress;
         /// <summary>
         /// Прогресс в процентах
         /// </summary>
-        public float progress;
+        public float Progress { get => progress; set => progress = value; }
     }
 
     /// <summary>
     /// Класс аргументов событий изменения статуса
     /// </summary>
-    public class StatusChangeArgs : EventArgs
+    public class StatusChangeEventArgs : EventArgs
     {
+        private string message;
+        private bool error;
+        
         /// <summary>
         /// Сообщение
         /// </summary>
-        public string Message;
+        public string Message { get => message; set => message = value; }
         /// <summary>
         /// Флаг ошибки
         /// </summary>
-        public bool Error;
+        public bool Error { get => error; set => error = value; }
     }
 
     public partial class Oblik
     {
+
         //Делегаты событий класса
-        public delegate void Progress(object sender, ProgressEventArgs e);
-        public delegate void StatusChange(object sender, StatusChangeArgs e);
+        public delegate void ProgressEventHandler(object sender, ProgressEventArgs e);
+        public delegate void StatusChangeEventHandler(object sender, StatusChangeEventArgs e);
 
         /// <summary>
         /// Событие прогресса данных
         /// </summary>
-        public event Progress OnProgress;
+        public event ProgressEventHandler OnProgress;
 
         /// <summary>
         /// Событие изменения статуса
         /// </summary>
-        public event StatusChange OnStatusChange;
+        public event StatusChangeEventHandler OnStatusChange;
 
         //Генераторы событий
 
@@ -57,12 +62,12 @@ namespace Oblik
         /// <param name="error">Флаг ошибки</param>
         private void ChangeStatus(string message, bool error)
         {
-            StatusChangeArgs args = new StatusChangeArgs
+            StatusChangeEventArgs args = new StatusChangeEventArgs
             {
                 Message = message,
                 Error = error
             };
-            OnStatusChange?.Invoke(this, args);
+            OnStatusChange.Invoke(this, args);
         }
 
         /// <summary>
@@ -73,10 +78,15 @@ namespace Oblik
         {
             ProgressEventArgs args = new ProgressEventArgs
             {
-                progress = progress
+                Progress = progress
             };
-            OnProgress?.Invoke(this, args);
+            OnProgress.Invoke(this, args);
+        }       
+    }
 
-        }
+    //Класс - заглушка для событий
+    internal class Dummy
+    {
+        internal void DummyEventHandler(object sender, EventArgs e) { }
     }
 }

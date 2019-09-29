@@ -2,9 +2,10 @@
 
 using System;
 using System.Collections.Generic;
+using OblikControl.Resources;
 
 
-namespace Oblik
+namespace OblikControl
 {
     public partial class Oblik
     {
@@ -12,14 +13,15 @@ namespace Oblik
         /// Получить количество строк суточного графика (сегмент #44)
         /// </summary>
         /// <returns>Количество строк суточного графика или -1 в случае ошибки</returns>
-        public int DayGraphRecs()
+        public int GetDayGraphRecs()
         {
             const byte segment = 44;
             const ushort offset = 0;
             const byte len = 2;
             if (SegmentRead(segment, offset, len, out byte[] QueryResult))
             {
-                return ToUint16(QueryResult);
+                int res = ToUint16(QueryResult);
+                return res;
             }
             return -1;
         }
@@ -72,33 +74,28 @@ namespace Oblik
         /// <param name="lines">Количество строк в запросе</param>
         /// <param name="offset">Смещение относительно начала, в строках</param>
         /// <returns>Список строк суточного графика</returns>
-        public List<DayGraphRow> GetDayGraphList(uint lines, uint offset)
+        public List<DayGraphRow> GetDayGraphList(int lines, int offset)
         {
             List<DayGraphRow> res = new List<DayGraphRow>();
             const byte segment = 45;                                //Сегмент суточного графика
             const uint LineLen = 28;                                //28 байт на 1 строку данных по протоколу счетчика
             const uint MaxReqLines = 8;                             //Максимальное количество строк в запросе
             const byte MaxReqBytes = (byte)(LineLen * MaxReqLines); //Максимальный размер запроса в байтах
-            byte[] _buf;                                            //Буфер
-            int TotalLines = DayGraphRecs();                        //Количество строк суточного графика фактически в счетчике
-
+            int TotalLines = GetDayGraphRecs();                     //Количество строк суточного графика фактически в счетчике
             //Если запрос выходит за диапазон или нет строк для чтения, то выход
             if ((TotalLines <= 0) || ((lines + offset) > TotalLines))
             {
-                ChangeStatus("Нет записей для чтения", false);
+                ChangeStatus(StringsTable.Timeout, false);
                 SetProgress(100);
                 return res;
             }
-            uint OffsetBytes = offset * LineLen;
-            uint BytesReq = (lines - offset) * LineLen;                     //Всего запрошено байт
-            _buf = new byte[BytesReq];
+            uint OffsetBytes = (uint)(offset * LineLen);
+            int BytesReq = (int)((lines - offset) * LineLen);                     //Всего запрошено байт
             ushort curroffs = 0;                                            //Текущий сдвиг в байтах
             ushort maxoffs = (ushort)(OffsetBytes + (lines - 1) * LineLen); //Максимальный сдвиг для чтения последней строки
             byte bytestoread = MaxReqBytes;                                 //Байт в запросе
-            uint LinesRead = 0;                                             //Счетчик считанных строк
             float Progress = 0;                                             //Прогресс выполнения операции
             float ProgressStep = (float)(100.0 / BytesReq);                 //Прогресс на 1 запрошенный байт
-            byte[] QueryResult;                                             //Данные от 1 запроса
             while (curroffs <= maxoffs)
             {
                 if (((BytesReq - curroffs) / MaxReqBytes) == 0)
@@ -106,22 +103,33 @@ namespace Oblik
                     bytestoread = (byte)((BytesReq - curroffs) % MaxReqBytes);
                 }
 
-                if (SegmentRead(segment, curroffs, bytestoread, out QueryResult))
+                if (SegmentRead(segment, curroffs, bytestoread, out byte[] QueryResult))
                 {
                     Progress += ProgressStep * bytestoread;
-                    SetProgress(Progress);                                      //Вызов события прогресса
-                    Array.Resize(ref _buf, (int)(curroffs + LineLen));
-                    Array.Copy(QueryResult, 0, _buf, curroffs, QueryResult.Length);       //Результат считывания помещается в L2Data
+                    SetProgress(Progress);                                                  //Вызов события прогресса
                     curroffs += bytestoread;
-                    LinesRead += bytestoread / LineLen;
+                    uint LinesRead = bytestoread / LineLen;                                 //Счетчик считанных строк
                     //Получение из ответа структуры суточного графика
                     for (int i = 0; i < LinesRead; i++)
                     {
-                        byte[] _tmp = new byte[LineLen];
-                        Array.Copy(_buf, (i * LineLen), _tmp, 0, LineLen);
-                        res.Add(ToDayGraphRow(_tmp));
+                        res.Add(ToDayGraphRow(ArrayPart(QueryResult,(int)(i * LineLen), (int)LineLen)));
                     }
                 }
+                else { break; }
+            }
+            return res;
+        }
+        /// <summary>
+        /// Получить суточный график  (сегмент #45)
+        /// </summary>
+        /// <returns></returns>
+        public List<DayGraphRow> GetDayGraphList()
+        {
+            List<DayGraphRow> res = new List<DayGraphRow>();
+            int recs = GetDayGraphRecs();
+            if (recs > 0)
+            {
+                res = GetDayGraphList(recs, 0);
             }
             return res;
         }
@@ -167,6 +175,50 @@ namespace Oblik
         }
 
         /// <summary>
+        /// Получить карту сегментов
+        /// </summary>
+        /// <returns>Список сегментов</returns>
+        public List<SegmentsMapRec> GetSegmentsMap()
+        {
+            List<SegmentsMapRec> res = new List<SegmentsMapRec>();
+            SegmentsMapRec item;
+            //Получение количества сегментов
+            const byte segment = 1;
+            const int RecSize = 4;              //Количество байт на 1 запись 
+            ushort offset = 0;
+            byte len = 1;
+            if (!SegmentRead(segment, offset, len, out byte[] QueryResult)) { return res; }
+            int nsegment = QueryResult[0];      //Количество сегментов в таблице
+            //Получение списка сегментов
+            offset++;
+            len = (byte)(nsegment * RecSize);
+            if (!SegmentRead(segment, offset, len, out QueryResult)) { return res; }
+            for (int i = 0; i < nsegment; i++)
+            {
+                item = ToSegmentsMapRec(ArrayPart(QueryResult, i * 4, RecSize));
+                res.Add(item);
+            }
+            return res;
+        }
+
+        /// <summary>
+        /// Возвращает текущее время счетчика в текущем часовом поясе
+        /// </summary>
+        /// <param name="Time">Текущее время счетчика</param>
+        /// <returns>Успех операции</returns>
+        public bool GetTime(out DateTime Time)
+        {
+            Time = default;
+            const byte Segment = 64;
+            const UInt16 Offset = 0;
+            const byte Len = sizeof(UInt32);
+            if (!SegmentRead(Segment, Offset, Len, out byte[] answ)) { return false; }
+            Time = ToUTCTime(answ).ToLocalTime();
+            return true;
+        }
+
+        //------------Методы для внутреннего использования-----------------------------------
+        /// <summary>
         /// Получить параметры вычислений из счетчика (сегмент #56)
         /// </summary>
         /// <returns>Успех операции</returns>
@@ -192,6 +244,5 @@ namespace Oblik
             if (!SegmentWrite(segment, offset, data)) { return false; }
             return true;
         }
-
     }
 }

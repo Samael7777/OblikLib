@@ -1,6 +1,6 @@
 ﻿//Публичные свойства класса
 
-namespace Oblik
+namespace OblikControl
 {
     public partial class Oblik
     {
