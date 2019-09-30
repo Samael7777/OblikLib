@@ -454,11 +454,24 @@ namespace OblikControl
         /// <param name="array">Источник</param>
         /// <param name="StartIndex">Начальный индекс</param>
         /// <param name="Lenght">Длина</param>
-        /// <returns></returns>
+        /// <returns>Массив байт</returns>
         private static byte[] ArrayPart(byte[] array, int StartIndex, int Lenght)
         {
             byte[] res = new byte[Lenght];
             Array.Copy(array, StartIndex, res, 0, Lenght);
+            return res;
+        }
+
+        /// <summary>
+        /// Конвертирует структуру сетевых настроек в массив байт
+        /// </summary>
+        /// <param name="nc">Структура сетевых настроек</param>
+        /// <returns>Массив байт</returns>
+        private static byte[] NetworkConfigToByte (NetworkConfig nc)
+        {
+            byte[] res = new byte[3];
+            res[0] = nc.addr;
+            UInt16ToByte(nc.divisor).CopyTo(res, 1);
             return res;
         }
     }

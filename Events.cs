@@ -56,16 +56,15 @@ namespace OblikControl
         //Генераторы событий
 
         /// <summary>
-        /// Вызов события изменения статуса
+        /// Вызов события изменения статуса. В случае установки флага ошибки, вызывается исключение OblikException
         /// </summary>
         /// <param name="message">Сообщение</param>
         /// <param name="error">Флаг ошибки</param>
-        private void ChangeStatus(string message, bool error)
+        private void ChangeStatus(string message)
         {
             StatusChangeEventArgs args = new StatusChangeEventArgs
             {
-                Message = message,
-                Error = error
+                Message = message
             };
             OnStatusChange.Invoke(this, args);
         }

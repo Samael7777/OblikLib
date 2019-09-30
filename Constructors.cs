@@ -1,6 +1,6 @@
 ﻿//Конструкторы класса
-using OblikControl.Resources;
 using System.Resources;
+using OblikControl.Resources;
 
 [assembly: NeutralResourcesLanguageAttribute("ru")]
 
@@ -16,7 +16,7 @@ namespace OblikControl
         /// <summary>
         /// Параметры вычислений
         /// </summary>
-        private CalcUnitsStruct _CalcUnits;
+        CalcUnitsStruct _CalcUnits;
 
         //Конструкторы
         /// <summary>
@@ -60,26 +60,38 @@ namespace OblikControl
 
         public override string ToString()
         {
-            if (!GetFWVersion(out FirmwareVer fw)) { return string.Empty; }
-            int v1 = (int)(fw.Version & 15);
-            int v2 = (int)(fw.Version & 240);
             string text = string.Empty;
-            switch (v2)
+            FirmwareVer fw = default;
+            int v1, v2;
+            try
             {
-                case 0:
-                    text = StringsTable.CntrType1;
-                    break;
-                case 1:
-                    text = StringsTable.CntrType2;
-                    break;
-                case 2:
-                    text = StringsTable.CntrType3;
-                    break;
-                case 3:
-                    text = StringsTable.CntrType4;
-                    break;
+                GetFWVersion(out fw);
             }
-            text += $" V.{v1}.{fw.Build} mod.{v2} ";
+            catch
+            {
+                ChangeStatus(StringsTable.Error);
+            }
+            finally
+            {
+                v1 = fw.Version & 15;
+                v2 = fw.Version & 240;
+                switch (v2)
+                {
+                    case 0:
+                        text = StringsTable.CntrType1;
+                        break;
+                    case 1:
+                        text = StringsTable.CntrType2;
+                        break;
+                    case 2:
+                        text = StringsTable.CntrType3;
+                        break;
+                    case 3:
+                        text = StringsTable.CntrType4;
+                        break;
+                }
+                text += $" V.{v1}.{fw.Build} mod.{v2} ";
+            }
             return text;
         }
     }

@@ -38,7 +38,7 @@ namespace OblikControl
         /// <param name="Timeout">Таймаут</param>
         /// <param name="BytesToRead">Количество байт для чтения</param>
         /// <param name="buffer">Буфер для считанных данных</param>
-        private void ReadAnswer(SerialPort sp, int Timeout, int BytesToRead, out byte[] buffer)
+        private static void ReadAnswer(SerialPort sp, int Timeout, int BytesToRead, out byte[] buffer)
         {
             int BytesGet;
             int count = BytesToRead;
@@ -59,7 +59,7 @@ namespace OblikControl
                 count -= BytesGet;
                 offset += BytesGet;
             }
-            if (offset != BytesToRead) { throw new Exception(StringsTable.ReadError); }
+            if (offset != BytesToRead) { throw new OblikException(StringsTable.ReadError); }
         }
 
         /// <summary>
@@ -68,7 +68,7 @@ namespace OblikControl
         /// <param name="Query">Запрос к счетчику в формате массива L1</param>
         /// <param name="Answer">Ответ счетчика в формате массива L1</param>
         /// <return>Успех</return>>
-        private bool OblikQuery(byte[] Query, out byte[] Answer)
+        private void OblikQuery(byte[] Query, out byte[] Answer)
         {
             bool success = false;           //Флаг успеха операции
             SerialPort com = null;
@@ -94,11 +94,10 @@ namespace OblikControl
                 }
                 catch (Exception e)
                 {
-                    ChangeStatus(e.Message, true);
-                    return false;
+                    throw new OblikException(e.Message);
                 }
                 int r = _ConParams.Repeats.Value;
-                ChangeStatus(StringsTable.SendReq, false);
+                ChangeStatus(StringsTable.SendReq);
                 while ((r > 0) && (!success))   //Повтор при ошибке
                 {
                     com.DiscardOutBuffer();                                                                 //очистка буфера передачи
@@ -109,8 +108,7 @@ namespace OblikControl
                     }                                              
                     catch (Exception e)
                     {
-                        ChangeStatus(e.Message, true);
-                        return false;
+                        throw new OblikException(e.Message);
                     }
                     try
                     {
@@ -129,12 +127,12 @@ namespace OblikControl
                         ReadAnswer(com, (int)(_ConParams.Timeout.Value / 5u), len, out ReadBuffer);
                         ReadBuffer.CopyTo(Answer, 2);
                         success = (ReadBuffer.Length == len);
-                        ChangeStatus(ParseSegmenterror(Answer[2]),false);
+                        ChangeStatus(ParseSegmenterror(Answer[2]));
                     }
                     catch (Exception e)
                     {
                         success = false;
-                        ChangeStatus(e.Message, false);
+                        ChangeStatus(e.Message);
                     }
                 }
             }
@@ -142,7 +140,10 @@ namespace OblikControl
             {
                 if (com != null) { com.Dispose(); }
             }
-            return success;
+            if (!success)
+            {
+                throw new OblikException(StringsTable.QueryErr);
+            }
         }
 
         /// <summary>
@@ -204,14 +205,22 @@ namespace OblikControl
         /// <param name="Len">Количество данных для чтения</param>
         /// <param name="Data">Полученные данные</param>
         /// <returns>Успех операции</returns>
-        public bool SegmentRead(byte Segment, UInt16 Offset, byte Len, out byte[] Data)
+        public void SegmentRead(byte Segment, UInt16 Offset, byte Len, out byte[] Data)
         {
-            Data = null;
+            byte[] answer = null;
             byte[] Query = PerformFrame(Segment, Offset, Len, Access.Read);
-            if (!OblikQuery(Query, out byte[] answer)) { return false; }
-            if (!CheckAnswer(answer)) { return false; }
+            try
+            {
+                OblikQuery(Query, out answer);
+            }
+            finally
+            {
+            }
+            if (!CheckAnswer(answer, out string message))
+            {
+                throw new OblikException(message);
+            }
             Data = ArrayPart(answer, 4, answer.Length - 5);
-            return true;
         }
 
         /// <summary>
@@ -221,17 +230,25 @@ namespace OblikControl
         /// <param name="Offset">Смещение относительно начала сегмента</param>
         /// <param name="Data">Данные для записи</param>
         /// <returns>Успех операции</returns>
-        public bool SegmentWrite(byte Segment, UInt16 Offset, byte[] Data)
+        public void SegmentWrite(byte Segment, UInt16 Offset, byte[] Data)
         {
+            byte[] answer;
             if (Data == null)
             {
-                ChangeStatus(StringsTable.DataError, true);
-                return false;
+                throw new OblikException(StringsTable.DataError);
             }
             byte[] Query = PerformFrame(Segment, Offset, (byte)Data.Length, Access.Write, Data);
-            if (!OblikQuery(Query, out byte[] answer)) { return false; }
-            if (!CheckAnswer(answer)) { return false; }
-            return true;
+            try
+            {
+                OblikQuery(Query, out answer);
+            } 
+            finally
+            {
+            }
+            if (!CheckAnswer(answer, out string message))
+            {
+                throw new OblikException(message);
+            }
         }
 
 
@@ -344,36 +361,49 @@ namespace OblikControl
         /// <param name="answer">Массив с ответом счетчика</param>
         /// <param name="QueryResult">Ответ счетчика без заголовков</param>
         /// <return>Корректность принятых данных</return>
-        private bool CheckAnswer(byte[] answer)
+        private static bool CheckAnswer(byte[] answer, out string message)
         {
-            int L1Result = answer[0];
-            string L1ResultMsg = ParseChannelError(L1Result);
-            if (L1Result != 1)
+            bool status = true;
+            message = string.Empty;
+            if (answer == null)
             {
-                ChangeStatus(L1ResultMsg, true);
-                return false;
+                status = false;
+                message = StringsTable.DataError;
             }
-            ChangeStatus(L1ResultMsg, false);
-            int L2Result = answer[2];
-            string L2ResultMsg = ParseSegmenterror(L2Result);
-            if (L2Result != 0)
+            if (status)
             {
-                ChangeStatus(L2ResultMsg, true);
-                return false;
+                int L1Result = answer[0];
+                message = ParseChannelError(L1Result);
+                if (L1Result != 1)
+                {
+                    message = ParseChannelError(L1Result);
+                    status = false;
+                }
             }
-            //Проверка контрольной суммы
-            byte cs = 0;
-            for (int i = 0; i < answer.Length; i++)
+            if (status)
             {
-                cs ^= answer[i];
+                int L2Result = answer[2];
+                if (L2Result != 0)
+                {
+                    message = ParseSegmenterror(L2Result);
+                    status = false;
+                }
             }
-            if (cs != 0)
+            if (status)
             {
-                ChangeStatus(StringsTable.CSCError, true);
-                return false;
+                //Проверка контрольной суммы
+                byte cs = 0;
+                for (int i = 0; i < answer.Length; i++)
+                {
+                    cs ^= answer[i];
+                }
+                if (cs != 0)
+                {
+                    message = StringsTable.CSCError;
+                    status = false;
+                }
             }
-            ChangeStatus(L2ResultMsg, false);
-            return true;
+            return status;
         }
     }
 }

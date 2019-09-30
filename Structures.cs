@@ -211,4 +211,18 @@ namespace OblikControl
         /// </summary>
         public int Accsess { get => accsess; set => accsess = value; }
     }
+    /// <summary>
+    /// Структура сетевой конфигурации счетчика
+    /// </summary>
+    public struct NetworkConfig
+    {
+        /// <summary>
+        /// Сетевой адрес по протоколу RS-485
+        /// </summary>
+        public byte addr;
+        /// <summary>
+        /// Скорость соединения, делитель от 115200
+        /// </summary>
+        public ushort divisor;
+    }
 }

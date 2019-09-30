@@ -117,6 +117,12 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="CleanDGOK" xml:space="preserve">
+    <value>Очистка суточного графика успешна</value>
+  </data>
+  <data name="CleanELOK" xml:space="preserve">
+    <value>Очистка журнала событий успешна</value>
+  </data>
   <data name="CntrType1" xml:space="preserve">
     <value>ЛО-3Tx-xMx</value>
   </data>
@@ -134,6 +140,30 @@
   </data>
   <data name="DataError" xml:space="preserve">
     <value>Ошибка данных</value>
+  </data>
+  <data name="Error" xml:space="preserve">
+    <value>Ошибка</value>
+  </data>
+  <data name="GetCVOK" xml:space="preserve">
+    <value>Текушие значения получены успешно</value>
+  </data>
+  <data name="GetDayGraphListOK" xml:space="preserve">
+    <value>Суточный график получен успешно</value>
+  </data>
+  <data name="GetDGROK" xml:space="preserve">
+    <value>Данные о размере суточного графика получены</value>
+  </data>
+  <data name="GetFWVerOK" xml:space="preserve">
+    <value>Версия ПО получена успешно</value>
+  </data>
+  <data name="GetNetOk" xml:space="preserve">
+    <value>Настройки сети получены успешно</value>
+  </data>
+  <data name="GetSegMapOK" xml:space="preserve">
+    <value>Карта сегментов получена успешно</value>
+  </data>
+  <data name="GetTimeOK" xml:space="preserve">
+    <value>Время счетчика получено успешно</value>
   </data>
   <data name="L1CSCError" xml:space="preserve">
     <value>Ошибка контрольной суммы</value>
@@ -186,11 +216,29 @@
   <data name="L2ErrUnk" xml:space="preserve">
     <value>Неизвестная ошибка L2</value>
   </data>
+  <data name="PwdSetOK" xml:space="preserve">
+    <value>Пароль успешно установлен</value>
+  </data>
+  <data name="PwdSetUserErr" xml:space="preserve">
+    <value>Запрещена смена пароля системному пользователю</value>
+  </data>
+  <data name="QueryErr" xml:space="preserve">
+    <value>Ошибка выполнения запроса</value>
+  </data>
+  <data name="RangeErr" xml:space="preserve">
+    <value>Данные выходят за допустимый диапазон</value>
+  </data>
   <data name="ReadError" xml:space="preserve">
     <value>Ошибка чтения</value>
   </data>
   <data name="SendReq" xml:space="preserve">
     <value>Отправка запроса...</value>
+  </data>
+  <data name="SetCurrTimeOK" xml:space="preserve">
+    <value>Текущее время установлено</value>
+  </data>
+  <data name="SetNetOK" xml:space="preserve">
+    <value>Настройки сети установлены успешно</value>
   </data>
   <data name="Timeout" xml:space="preserve">
     <value>Таймаут</value>
