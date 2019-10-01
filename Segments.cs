@@ -1,8 +1,8 @@
 ﻿//Операции с сегментами счетчика
 
+using OblikControl.Resources;
 using System;
 using System.Collections.Generic;
-using OblikControl.Resources;
 using System.Text;
 
 
@@ -50,7 +50,7 @@ namespace OblikControl
             finally
             {
                 ChangeStatus(StringsTable.CleanDGOK);
-            }    
+            }
         }
 
         /// <summary>
@@ -143,7 +143,7 @@ namespace OblikControl
                         {
                             res.Add(ToDayGraphRow(ArrayPart(QueryResult, (int)(i * LineLen), (int)LineLen)));
                         }
-                    }  
+                    }
                 }
             }
             ChangeStatus(StringsTable.GetDayGraphListOK);
@@ -197,7 +197,7 @@ namespace OblikControl
         /// <summary>
         /// Получить текущие (усредненные за 2 сек.) значения электроэнергии (сегмент #36)
         /// </summary>
-        /// <param name="values">Структура текущих значений</param>
+        /// <param name="Values">Структура текущих значений</param>
         public void GetCurrentValues(out CurrentValues Values)
         {
             Values = new CurrentValues();
@@ -237,7 +237,7 @@ namespace OblikControl
             {
                 //Получение количества сегментов
                 SegmentRead(segment, offset, len, out QueryResult);
-                nsegment = QueryResult[0];      
+                nsegment = QueryResult[0];
                 //Получение списка сегментов
                 offset++;
                 len = (byte)(nsegment * RecSize);
@@ -300,8 +300,8 @@ namespace OblikControl
             {
                 if (answ != null)
                 {
-                    res.addr = answ[0];
-                    res.divisor = ToUint16(ArrayPart(answ, 1, 2));
+                    res.Addr = answ[0];
+                    res.Divisor = ToUint16(ArrayPart(answ, 1, 2));
                 }
             }
             ChangeStatus(StringsTable.GetNetOk);
@@ -312,7 +312,7 @@ namespace OblikControl
         /// Установить настройки сети счетчика (сегмент #67)
         /// </summary>
         /// <param name="nc">Настройки сети счетчика</param>
-        public void SetNetworkConfig (NetworkConfig nc)
+        public void SetNetworkConfig(NetworkConfig nc)
         {
             const byte Segment = 67;
             const UInt16 Offset = 0;
@@ -326,19 +326,19 @@ namespace OblikControl
                 //Меняем настройку сети класса в соответствии с новой настройкой
                 if (_ConParams.Address != 0)
                 {
-                    _ConParams.Address = nc.addr;
-                    _ConParams.Baudrate = 115200 / nc.divisor;
+                    _ConParams.Address = nc.Addr;
+                    _ConParams.Baudrate = 115200 / nc.Divisor;
                 }
                 ChangeStatus(StringsTable.SetNetOK);
             }
         }
-        
+
         /// <summary>
         /// Установка пароля пользователя
         /// </summary>
         /// <param name="accessLevel">Уровень доступа</param>
         /// <param name="password">Пароль</param>
-        public void SetPassword(AccessLevel accessLevel, string password)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+        public void SetPassword(AccessLevel accessLevel, string password)
         {
             if (password == null) { password = string.Empty; }
             if (password.Length > 8) { password = password.Substring(0, 8); }
@@ -375,9 +375,9 @@ namespace OblikControl
                 }
             }
         }
-        
-        
-        
+
+
+
         //------------Методы для внутреннего использования-----------------------------------
         /// <summary>
         /// Получить параметры вычислений из счетчика (сегмент #56)

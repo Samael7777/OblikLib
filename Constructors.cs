@@ -1,11 +1,14 @@
 ﻿//Конструкторы класса
-using System.Resources;
 using OblikControl.Resources;
+using System.Resources;
 
 [assembly: NeutralResourcesLanguageAttribute("ru")]
 
 namespace OblikControl
 {
+    /// <summary>
+    /// Класс для работы со счетчиками Облик
+    /// </summary>
     public partial class Oblik
     {
         /// <summary>

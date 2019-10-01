@@ -11,11 +11,10 @@ namespace OblikControl
     /// </summary>
     public class ProgressEventArgs : EventArgs
     {
-        private float progress;
         /// <summary>
         /// Прогресс в процентах
         /// </summary>
-        public float Progress { get => progress; set => progress = value; }
+        public float Progress { get; set; }
     }
 
     /// <summary>
@@ -23,24 +22,25 @@ namespace OblikControl
     /// </summary>
     public class StatusChangeEventArgs : EventArgs
     {
-        private string message;
-        private bool error;
-        
         /// <summary>
         /// Сообщение
         /// </summary>
-        public string Message { get => message; set => message = value; }
-        /// <summary>
-        /// Флаг ошибки
-        /// </summary>
-        public bool Error { get => error; set => error = value; }
+        public string Message { get; set; }
     }
 
     public partial class Oblik
     {
-
-        //Делегаты событий класса
+        /// <summary>
+        /// Делегат события прогресса операции
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         public delegate void ProgressEventHandler(object sender, ProgressEventArgs e);
+        /// <summary>
+        /// Делегат события изменения статуса
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         public delegate void StatusChangeEventHandler(object sender, StatusChangeEventArgs e);
 
         /// <summary>
@@ -59,7 +59,6 @@ namespace OblikControl
         /// Вызов события изменения статуса. В случае установки флага ошибки, вызывается исключение OblikException
         /// </summary>
         /// <param name="message">Сообщение</param>
-        /// <param name="error">Флаг ошибки</param>
         private void ChangeStatus(string message)
         {
             StatusChangeEventArgs args = new StatusChangeEventArgs
@@ -80,7 +79,7 @@ namespace OblikControl
                 Progress = progress
             };
             OnProgress.Invoke(this, args);
-        }       
+        }
     }
 
     //Класс - заглушка для событий

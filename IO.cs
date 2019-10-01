@@ -1,9 +1,9 @@
 ﻿//Обеспечение операций ввода/вывода
 
+using OblikControl.Resources;
 using System;
 using System.IO.Ports;
 using System.Text;
-using OblikControl.Resources;
 
 
 namespace OblikControl
@@ -105,7 +105,7 @@ namespace OblikControl
                     try
                     {
                         com.Write(Query, 0, Query.Length);
-                    }                                              
+                    }
                     catch (Exception e)
                     {
                         throw new OblikException(e.Message);
@@ -241,7 +241,7 @@ namespace OblikControl
             try
             {
                 OblikQuery(Query, out answer);
-            } 
+            }
             finally
             {
             }
@@ -359,7 +359,7 @@ namespace OblikControl
         /// Проверка принятых данных на корректность
         /// </summary>
         /// <param name="answer">Массив с ответом счетчика</param>
-        /// <param name="QueryResult">Ответ счетчика без заголовков</param>
+        /// <param name="message">Сообщение об ошибке</param>
         /// <return>Корректность принятых данных</return>
         private static bool CheckAnswer(byte[] answer, out string message)
         {

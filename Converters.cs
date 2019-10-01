@@ -2,7 +2,6 @@
 
 using System;
 using System.IO;
-using System.Collections.Generic;
 
 namespace OblikControl
 {
@@ -397,7 +396,7 @@ namespace OblikControl
         private static CurrentValues ToCurrentValues(byte[] array)
         {
             CurrentValues res = new CurrentValues();
-            
+
             int index = 0;
             res.Curr1 = ToUminiflo(ArrayPart(array, index, 2));
             index += 2;
@@ -467,11 +466,11 @@ namespace OblikControl
         /// </summary>
         /// <param name="nc">Структура сетевых настроек</param>
         /// <returns>Массив байт</returns>
-        private static byte[] NetworkConfigToByte (NetworkConfig nc)
+        private static byte[] NetworkConfigToByte(NetworkConfig nc)
         {
             byte[] res = new byte[3];
-            res[0] = nc.addr;
-            UInt16ToByte(nc.divisor).CopyTo(res, 1);
+            res[0] = nc.Addr;
+            UInt16ToByte(nc.Divisor).CopyTo(res, 1);
             return res;
         }
     }
