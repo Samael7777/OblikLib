@@ -19,14 +19,19 @@ namespace OblikControl
             const byte segment = 44;
             const ushort offset = 0;
             const byte len = 2;
-            int res = -1;
+            int res;
             try
             {
                 SegmentRead(segment, offset, len, out byte[] QueryResult);
                 res = (QueryResult == null) ? -1 : ToUint16(QueryResult);
-                ChangeStatus(StringsTable.GetDGROK);
+                ChangeCmdStatus(StringsTable.GetDGROK);
             }
-            finally { }
+            catch (OblikSegException)
+            {
+                string mes = StringsTable.GetDayGraphRecsErr;
+                ChangeSegStatus(mes);
+                throw new OblikCmdException(mes);
+            }
             return res;
         }
 
@@ -43,7 +48,7 @@ namespace OblikControl
             try
             {
                 SegmentWrite(segment, offset, cmd);
-                ChangeStatus(StringsTable.CleanDGOK);
+                ChangeCmdStatus(StringsTable.CleanDGOK);
             }
             finally { }
         }
@@ -61,7 +66,7 @@ namespace OblikControl
             try
             {
                 SegmentWrite(segment, offset, cmd);
-                ChangeStatus(StringsTable.CleanELOK);
+                ChangeCmdStatus(StringsTable.CleanELOK);
             }
             finally { }
         }
@@ -79,7 +84,7 @@ namespace OblikControl
             try
             {
                 SegmentWrite(segment, offset, Buf);
-                ChangeStatus(StringsTable.SetCurrTimeOK);
+                ChangeCmdStatus(StringsTable.SetCurrTimeOK);
             }
             finally { }
         }
@@ -101,7 +106,7 @@ namespace OblikControl
             //Если запрос выходит за диапазон или нет строк для чтения, то исключение
             if ((TotalLines <= 0) || ((lines + offset) > TotalLines))
             {
-                throw new OblikException(StringsTable.RangeErr);
+                throw new OblikIOException(StringsTable.RangeErr);
             }
             uint OffsetBytes = (uint)(offset * LineLen);
             int BytesReq = (int)((lines - offset) * LineLen);               //Всего запрошено байт
@@ -132,7 +137,7 @@ namespace OblikControl
                         }
                     }
                 }
-                ChangeStatus(StringsTable.GetDayGraphListOK);
+                ChangeCmdStatus(StringsTable.GetDayGraphListOK);
             }
             finally { }
             return res;
@@ -174,7 +179,7 @@ namespace OblikControl
                     FirmwareVer.Version = QueryResult[0];
                     FirmwareVer.Build = QueryResult[1];
                 }
-                ChangeStatus(StringsTable.GetFWVerOK);
+                ChangeCmdStatus(StringsTable.GetFWVerOK);
             }
             finally { }
         }
@@ -197,7 +202,7 @@ namespace OblikControl
                 {
                     Values = ToCurrentValues(QueryResult);
                 }
-                ChangeStatus(StringsTable.GetCVOK);
+                ChangeCmdStatus(StringsTable.GetCVOK);
             }
             finally { }
         }
@@ -228,7 +233,7 @@ namespace OblikControl
                     item = ToSegmentsMapRec(ArrayPart(QueryResult, i * 4, RecSize));
                     res.Add(item);
                 }
-                ChangeStatus(StringsTable.GetSegMapOK);
+                ChangeCmdStatus(StringsTable.GetSegMapOK);
             }
             finally { }
             return res;
@@ -250,7 +255,7 @@ namespace OblikControl
                 if (answ != null)
                 {
                     res = ToUTCTime(answ).ToLocalTime();
-                    ChangeStatus(StringsTable.GetTimeOK);
+                    ChangeCmdStatus(StringsTable.GetTimeOK);
                 }
             }
             finally { }
@@ -274,7 +279,7 @@ namespace OblikControl
                 {
                     res.Addr = answ[0];
                     res.Divisor = ToUint16(ArrayPart(answ, 1, 2));
-                    ChangeStatus(StringsTable.GetNetOk);
+                    ChangeCmdStatus(StringsTable.GetNetOk);
                 }
             }
             finally { }
@@ -298,7 +303,7 @@ namespace OblikControl
                 {
                     _ConParams.Address = nc.Addr;
                     _ConParams.Baudrate = 115200 / nc.Divisor;
-                    ChangeStatus(StringsTable.SetNetOK);
+                    ChangeCmdStatus(StringsTable.SetNetOK);
                 }
             }
             finally { }
@@ -330,13 +335,13 @@ namespace OblikControl
                     break;
                 case AccessLevel.System:
                     //Исключение при попытке поменять пароль системному пользователю
-                    ChangeStatus(StringsTable.PwdSetUserErr);
-                    throw new OblikException(StringsTable.PwdSetUserErr);
+                    ChangeCmdStatus(StringsTable.PwdSetUserErr);
+                    throw new OblikIOException(StringsTable.PwdSetUserErr);
             }
             try
             {
                 SegmentWrite(Segment, Offset, pwdarray);
-                ChangeStatus(StringsTable.PwdSetOK);
+                ChangeCmdStatus(StringsTable.PwdSetOK);
                 if (_ConParams.AccessLevel == accessLevel)
                 {
                     _ConParams.Password = password;

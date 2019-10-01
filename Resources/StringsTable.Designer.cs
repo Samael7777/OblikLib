@@ -160,6 +160,15 @@ namespace OblikControl.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Ошибка получения количества записей суточного графика.
+        /// </summary>
+        public static string GetDayGraphRecsErr {
+            get {
+                return ResourceManager.GetString("GetDayGraphRecsErr", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Данные о размере суточного графика получены.
         /// </summary>
         public static string GetDGROK {
@@ -399,6 +408,33 @@ namespace OblikControl.Resources {
         public static string ReadError {
             get {
                 return ResourceManager.GetString("ReadError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Ошибка обработки запроса.
+        /// </summary>
+        public static string ReqError {
+            get {
+                return ResourceManager.GetString("ReqError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Ошибка чтения сегмента.
+        /// </summary>
+        public static string SegReadErr {
+            get {
+                return ResourceManager.GetString("SegReadErr", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Ошибка записи в сегмент.
+        /// </summary>
+        public static string SegWriteErr {
+            get {
+                return ResourceManager.GetString("SegWriteErr", resourceCulture);
             }
         }
         

@@ -18,16 +18,35 @@ namespace OblikControl
     }
 
     /// <summary>
-    /// Класс аргументов событий изменения статуса
+    /// Класс аргументов событий изменения статуса команд
     /// </summary>
-    public class StatusChangeEventArgs : EventArgs
+    public class CmdStatusChangeEventArgs : EventArgs
     {
         /// <summary>
         /// Сообщение
         /// </summary>
         public string Message { get; set; }
     }
-
+    /// <summary>
+    /// Класс аргументов событий изменения статуса операций с сегментами
+    /// </summary>
+    public class SegStatusChangeEventArgs : EventArgs
+    {
+        /// <summary>
+        /// Сообщение
+        /// </summary>
+        public string Message { get; set; }
+    }
+    /// <summary>
+    /// Класс аргументов событий изменения статуса операций ввода/вывода
+    /// </summary>
+    public class IOStatusChangeEventArgs : EventArgs
+    {
+        /// <summary>
+        /// Сообщение
+        /// </summary>
+        public string Message { get; set; }
+    }
     public partial class Oblik
     {
         /// <summary>
@@ -37,35 +56,78 @@ namespace OblikControl
         /// <param name="e"></param>
         public delegate void ProgressEventHandler(object sender, ProgressEventArgs e);
         /// <summary>
-        /// Делегат события изменения статуса
+        /// Делегат события изменения статуса команд
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public delegate void StatusChangeEventHandler(object sender, StatusChangeEventArgs e);
-
+        public delegate void CmdStatusChangeEventHandler(object sender, CmdStatusChangeEventArgs e);
+        /// <summary>
+        /// Делегат события изменения статуса операций с сегментами
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public delegate void SegStatusChangeEventHandler(object sender, SegStatusChangeEventArgs e);
+        /// <summary>
+        /// Делегат события изменения статуса операций ввода/вывода
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        public delegate void IOStatusChangeEventHandler(object sender, IOStatusChangeEventArgs e);
+        
         /// <summary>
         /// Событие прогресса данных
         /// </summary>
         public event ProgressEventHandler OnProgress;
-
         /// <summary>
         /// Событие изменения статуса
         /// </summary>
-        public event StatusChangeEventHandler OnStatusChange;
+        public event CmdStatusChangeEventHandler OnCmdStatusChange;
+        /// <summary>
+        /// Событие изменения статуса операций с сегментами
+        /// </summary>
+        public event SegStatusChangeEventHandler OnSegStatusChange;
+        /// <summary>
+        /// Событие изменения статуса операций ввода/вывода
+        /// </summary>
+        public event IOStatusChangeEventHandler OnIOStatusChange;
 
         //Генераторы событий
 
         /// <summary>
-        /// Вызов события изменения статуса. В случае установки флага ошибки, вызывается исключение OblikException
+        /// Вызов события изменения статуса команды.
         /// </summary>
         /// <param name="message">Сообщение</param>
-        private void ChangeStatus(string message)
+        private void ChangeCmdStatus(string message)
         {
-            StatusChangeEventArgs args = new StatusChangeEventArgs
+            CmdStatusChangeEventArgs args = new CmdStatusChangeEventArgs
             {
                 Message = message
             };
-            OnStatusChange.Invoke(this, args);
+            OnCmdStatusChange.Invoke(this, args);
+        }
+        /// <summary>
+        /// Вызов события изменения статуса операций с сегментами
+        /// </summary>
+        /// <param name="message">Сообщение</param>
+        private void ChangeSegStatus(string message)
+        {
+            SegStatusChangeEventArgs args = new SegStatusChangeEventArgs
+            {
+                Message = message
+            };
+            OnSegStatusChange.Invoke(this, args);
+        }
+        /// <summary>
+        /// Вызов события изменения статуса операций ввода/вывода
+        /// </summary>
+        /// <param name="message">Сообщение</param>
+        private void ChangeIOStatus(string message)
+        {
+            IOStatusChangeEventArgs args = new IOStatusChangeEventArgs
+            {
+                Message = message
+            };
+            OnIOStatusChange.Invoke(this, args);
         }
 
         /// <summary>

@@ -150,6 +150,9 @@
   <data name="GetDayGraphListOK" xml:space="preserve">
     <value>Суточный график получен успешно</value>
   </data>
+  <data name="GetDayGraphRecsErr" xml:space="preserve">
+    <value>Ошибка получения количества записей суточного графика</value>
+  </data>
   <data name="GetDGROK" xml:space="preserve">
     <value>Данные о размере суточного графика получены</value>
   </data>
@@ -230,6 +233,15 @@
   </data>
   <data name="ReadError" xml:space="preserve">
     <value>Ошибка чтения</value>
+  </data>
+  <data name="ReqError" xml:space="preserve">
+    <value>Ошибка обработки запроса</value>
+  </data>
+  <data name="SegReadErr" xml:space="preserve">
+    <value>Ошибка чтения сегмента</value>
+  </data>
+  <data name="SegWriteErr" xml:space="preserve">
+    <value>Ошибка записи в сегмент</value>
   </data>
   <data name="SendReq" xml:space="preserve">
     <value>Отправка запроса...</value>

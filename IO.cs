@@ -38,7 +38,7 @@ namespace OblikControl
         /// <param name="Timeout">Таймаут</param>
         /// <param name="BytesToRead">Количество байт для чтения</param>
         /// <param name="buffer">Буфер для считанных данных</param>
-        private static void ReadAnswer(SerialPort sp, int Timeout, int BytesToRead, out byte[] buffer)
+        private void ReadAnswer(SerialPort sp, int Timeout, int BytesToRead, out byte[] buffer)
         {
             int BytesGet;
             int count = BytesToRead;
@@ -47,7 +47,11 @@ namespace OblikControl
             ulong start = GetTickCount();
             while (offset < BytesToRead)
             {
-                if ((GetTickCount() - start) > (ulong)Timeout) { throw new Exception(StringsTable.Timeout); }
+                if ((GetTickCount() - start) > (ulong)Timeout)
+                {
+                    ChangeIOStatus(StringsTable.Timeout);
+                    throw new Exception(StringsTable.Timeout);
+                }
                 try
                 {
                     BytesGet = (byte)sp.Read(buffer, offset, count);
@@ -59,7 +63,7 @@ namespace OblikControl
                 count -= BytesGet;
                 offset += BytesGet;
             }
-            if (offset != BytesToRead) { throw new OblikException(StringsTable.ReadError); }
+            if (offset != BytesToRead) { throw new OblikIOException(StringsTable.ReadError); }
         }
 
         /// <summary>
@@ -68,7 +72,7 @@ namespace OblikControl
         /// <param name="Query">Запрос к счетчику в формате массива L1</param>
         /// <param name="Answer">Ответ счетчика в формате массива L1</param>
         /// <return>Успех</return>>
-        private void OblikQuery(byte[] Query, out byte[] Answer)
+        public void OblikQuery(byte[] Query, out byte[] Answer)
         {
             bool success = false;           //Флаг успеха операции
             SerialPort com = null;
@@ -94,10 +98,11 @@ namespace OblikControl
                 }
                 catch (Exception e)
                 {
-                    throw new OblikException(e.Message);
+                    ChangeIOStatus(e.Message);
+                    throw new OblikIOException(e.Message);
                 }
                 int r = _ConParams.Repeats.Value;
-                ChangeStatus(StringsTable.SendReq);
+                ChangeCmdStatus(StringsTable.SendReq);
                 while ((r > 0) && (!success))   //Повтор при ошибке
                 {
                     com.DiscardOutBuffer();                                                                 //очистка буфера передачи
@@ -108,7 +113,8 @@ namespace OblikControl
                     }
                     catch (Exception e)
                     {
-                        throw new OblikException(e.Message);
+                        ChangeIOStatus(e.Message);
+                        throw new OblikIOException(e.Message);
                     }
                     try
                     {
@@ -117,7 +123,7 @@ namespace OblikControl
                         //Получение результата L1
                         ReadAnswer(com, _ConParams.Timeout.Value, 1, out byte[] ReadBuffer);
                         Answer[0] = ReadBuffer[0];
-                        if (Answer[0] != 1) { throw new Exception(ParseChannelError(Answer[0])); }
+                        if (Answer[0] != 1) { throw new OblikIOException(ParseChannelError(Answer[0])); }
                         //Получение количества байт в ответе
                         ReadAnswer(com, _ConParams.Timeout.Value, 1, out ReadBuffer);
                         Answer[1] = ReadBuffer[0];
@@ -127,12 +133,22 @@ namespace OblikControl
                         ReadAnswer(com, (int)(_ConParams.Timeout.Value / 5u), len, out ReadBuffer);
                         ReadBuffer.CopyTo(Answer, 2);
                         success = (ReadBuffer.Length == len);
-                        ChangeStatus(ParseSegmenterror(Answer[2]));
+                        if (Answer[2] != 0) { throw new OblikIOException(ParseSegmentError(Answer[2])); }
+                        //Проверка контрольной суммы
+                        byte cs = 0;
+                        for (int i = 0; i < Answer.Length; i++)
+                        {
+                            cs ^= Answer[i];
+                        }
+                        if (cs != 0)
+                        {
+                            throw new OblikIOException(StringsTable.CSCError);
+                        }
                     }
                     catch (Exception e)
                     {
                         success = false;
-                        ChangeStatus(e.Message);
+                        ChangeIOStatus(e.Message);
                     }
                 }
             }
@@ -142,7 +158,8 @@ namespace OblikControl
             }
             if (!success)
             {
-                throw new OblikException(StringsTable.QueryErr);
+                ChangeIOStatus(StringsTable.ReqError);
+                throw new OblikIOException(StringsTable.QueryErr);
             }
         }
 
@@ -207,21 +224,18 @@ namespace OblikControl
         /// <returns>Успех операции</returns>
         public void SegmentRead(byte Segment, UInt16 Offset, byte Len, out byte[] Data)
         {
-            byte[] answer;
-            string message;
-            bool check;
-            Data = null;
             byte[] Query = PerformFrame(Segment, Offset, Len, Access.Read);
             try
             {
-                OblikQuery(Query, out answer);
-                check = CheckAnswer(answer, out message);
-                if (check) { Data = ArrayPart(answer, 4, answer.Length - 5); }
+                OblikQuery(Query, out byte[] answer);
+                Data = ArrayPart(answer, 4, answer.Length - 5);
             }
-            finally
+            catch(OblikIOException)
             {
+                string mes = StringsTable.SegReadErr + $" #{Segment}";
+                ChangeSegStatus(mes);
+                throw new OblikSegException(mes);
             }
-            if (!check) { throw new OblikException(message); }
         }
 
         /// <summary>
@@ -233,27 +247,22 @@ namespace OblikControl
         /// <returns>Успех операции</returns>
         public void SegmentWrite(byte Segment, UInt16 Offset, byte[] Data)
         {
-            byte[] answer;
-            bool check;
-            string message;
             if (Data == null)
             {
-                throw new OblikException(StringsTable.DataError);
+                throw new OblikIOException(StringsTable.DataError);
             }
             byte[] Query = PerformFrame(Segment, Offset, (byte)Data.Length, Access.Write, Data);
             try
             {
-                OblikQuery(Query, out answer);
-                check = CheckAnswer(answer, out message);
+                OblikQuery(Query, out byte[] answer);
             }
-            finally
+            catch(OblikIOException) 
             {
+                string mes = StringsTable.SegWriteErr + $" #{Segment}";
+                ChangeSegStatus(mes);
+                throw new OblikSegException(mes);
             }
-            if (!check) { throw new OblikException(message); }
         }
-
-
-        //Методы обработки фреймов L1, L2
 
         /// <summary>
         /// Парсер ошибок L1
@@ -286,7 +295,7 @@ namespace OblikControl
         /// </summary>
         /// <param name="error">Код ошибки L2</param>
         /// <returns>Строка с текстом ошибки</returns>
-        private static string ParseSegmenterror(int error)
+        private static string ParseSegmentError(int error)
         {
             string res;
             switch (error)
@@ -354,57 +363,6 @@ namespace OblikControl
                 l2[k] ^= passwd[i % 8];
                 _x1 += (byte)i;
             }
-        }
-
-        /// <summary>
-        /// Проверка принятых данных на корректность
-        /// </summary>
-        /// <param name="answer">Массив с ответом счетчика</param>
-        /// <param name="message">Сообщение об ошибке</param>
-        /// <return>Корректность принятых данных</return>
-        private static bool CheckAnswer(byte[] answer, out string message)
-        {
-            bool status = true;
-            message = string.Empty;
-            if (answer == null)
-            {
-                status = false;
-                message = StringsTable.DataError;
-            }
-            if (status)
-            {
-                int L1Result = answer[0];
-                message = ParseChannelError(L1Result);
-                if (L1Result != 1)
-                {
-                    message = ParseChannelError(L1Result);
-                    status = false;
-                }
-            }
-            if (status)
-            {
-                int L2Result = answer[2];
-                if (L2Result != 0)
-                {
-                    message = ParseSegmenterror(L2Result);
-                    status = false;
-                }
-            }
-            if (status)
-            {
-                //Проверка контрольной суммы
-                byte cs = 0;
-                for (int i = 0; i < answer.Length; i++)
-                {
-                    cs ^= answer[i];
-                }
-                if (cs != 0)
-                {
-                    message = StringsTable.CSCError;
-                    status = false;
-                }
-            }
-            return status;
         }
     }
 }

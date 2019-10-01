@@ -31,7 +31,9 @@ namespace OblikControl
             //Заглушкии для событий
             Dummy dummy = new Dummy();
             OnProgress += dummy.DummyEventHandler;
-            OnStatusChange += dummy.DummyEventHandler;
+            OnCmdStatusChange += dummy.DummyEventHandler;
+            OnSegStatusChange += dummy.DummyEventHandler;
+            OnIOStatusChange += dummy.DummyEventHandler;
 
             _CalcUnits = new CalcUnitsStruct();
             _ConParams.AccessLevel = (Connection.AccessLevel != null) ? Connection.AccessLevel : AccessLevel.Energo;
@@ -72,7 +74,7 @@ namespace OblikControl
             }
             catch
             {
-                ChangeStatus(StringsTable.Error);
+                ChangeCmdStatus(StringsTable.Error);
             }
             finally
             {
