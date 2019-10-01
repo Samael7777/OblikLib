@@ -19,17 +19,14 @@ namespace OblikControl
             const byte segment = 44;
             const ushort offset = 0;
             const byte len = 2;
-            int res;
-            byte[] QueryResult = null;
+            int res = -1;
             try
             {
-                SegmentRead(segment, offset, len, out QueryResult);
-            }
-            finally
-            {
+                SegmentRead(segment, offset, len, out byte[] QueryResult);
                 res = (QueryResult == null) ? -1 : ToUint16(QueryResult);
                 ChangeStatus(StringsTable.GetDGROK);
             }
+            finally { }
             return res;
         }
 
@@ -46,11 +43,9 @@ namespace OblikControl
             try
             {
                 SegmentWrite(segment, offset, cmd);
-            }
-            finally
-            {
                 ChangeStatus(StringsTable.CleanDGOK);
             }
+            finally { }
         }
 
         /// <summary>
@@ -66,11 +61,9 @@ namespace OblikControl
             try
             {
                 SegmentWrite(segment, offset, cmd);
-            }
-            finally
-            {
                 ChangeStatus(StringsTable.CleanELOK);
             }
+            finally { }
         }
 
         /// <summary>
@@ -86,11 +79,9 @@ namespace OblikControl
             try
             {
                 SegmentWrite(segment, offset, Buf);
-            }
-            finally
-            {
                 ChangeStatus(StringsTable.SetCurrTimeOK);
             }
+            finally { }
         }
 
         /// <summary>
@@ -119,19 +110,15 @@ namespace OblikControl
             byte bytestoread = MaxReqBytes;                                 //Байт в запросе
             float Progress = 0;                                             //Прогресс выполнения операции
             float ProgressStep = (float)(100.0 / BytesReq);                 //Прогресс на 1 запрошенный байт
-            byte[] QueryResult = null;
-            while (curroffs <= maxoffs)
+            try
             {
-                if (((BytesReq - curroffs) / MaxReqBytes) == 0)
+                while (curroffs <= maxoffs)
                 {
-                    bytestoread = (byte)((BytesReq - curroffs) % MaxReqBytes);
-                }
-                try
-                {
-                    SegmentRead(segment, curroffs, bytestoread, out QueryResult);
-                }
-                finally
-                {
+                    if (((BytesReq - curroffs) / MaxReqBytes) == 0)
+                    {
+                        bytestoread = (byte)((BytesReq - curroffs) % MaxReqBytes);
+                    }
+                    SegmentRead(segment, curroffs, bytestoread, out byte[] QueryResult);
                     Progress += ProgressStep * bytestoread;
                     SetProgress(Progress);                                                  //Вызов события прогресса
                     curroffs += bytestoread;
@@ -145,8 +132,9 @@ namespace OblikControl
                         }
                     }
                 }
+                ChangeStatus(StringsTable.GetDayGraphListOK);
             }
-            ChangeStatus(StringsTable.GetDayGraphListOK);
+            finally { }
             return res;
         }
         /// <summary>
@@ -178,20 +166,17 @@ namespace OblikControl
             const byte segment = 2;
             const ushort offset = 0;
             const byte len = 2;
-            byte[] QueryResult = null;
             try
             {
-                SegmentRead(segment, offset, len, out QueryResult);
-            }
-            finally
-            {
+                SegmentRead(segment, offset, len, out byte[] QueryResult);
                 if (QueryResult != null)
                 {
-                    FirmwareVer.Version = (int)QueryResult[0];
-                    FirmwareVer.Build = (int)QueryResult[1];
+                    FirmwareVer.Version = QueryResult[0];
+                    FirmwareVer.Build = QueryResult[1];
                 }
                 ChangeStatus(StringsTable.GetFWVerOK);
             }
+            finally { }
         }
 
         /// <summary>
@@ -208,15 +193,13 @@ namespace OblikControl
             try
             {
                 SegmentRead(segment, offset, len, out QueryResult);
-            }
-            finally
-            {
                 if (QueryResult != null)
                 {
                     Values = ToCurrentValues(QueryResult);
                 }
                 ChangeStatus(StringsTable.GetCVOK);
             }
+            finally { }
         }
 
         /// <summary>
@@ -231,27 +214,23 @@ namespace OblikControl
             const int RecSize = 4;              //Количество байт на 1 запись 
             ushort offset = 0;
             byte len = 1;
-            byte[] QueryResult = null;
-            int nsegment = 0;                   //Количество сегментов в таблице
             try
             {
                 //Получение количества сегментов
-                SegmentRead(segment, offset, len, out QueryResult);
-                nsegment = QueryResult[0];
+                SegmentRead(segment, offset, len, out byte[] QueryResult);
+                int nsegment = QueryResult[0];  //Количество сегментов в таблице
                 //Получение списка сегментов
                 offset++;
                 len = (byte)(nsegment * RecSize);
                 SegmentRead(segment, offset, len, out QueryResult);
-            }
-            finally
-            {
                 for (int i = 0; i < nsegment; i++)
                 {
                     item = ToSegmentsMapRec(ArrayPart(QueryResult, i * 4, RecSize));
                     res.Add(item);
                 }
+                ChangeStatus(StringsTable.GetSegMapOK);
             }
-            ChangeStatus(StringsTable.GetSegMapOK);
+            finally { }
             return res;
         }
 
@@ -264,20 +243,17 @@ namespace OblikControl
             const byte Segment = 64;
             const UInt16 Offset = 0;
             const byte Len = sizeof(UInt32);
-            byte[] answ = null;
             DateTime res = default;
             try
             {
-                SegmentRead(Segment, Offset, Len, out answ);
+                SegmentRead(Segment, Offset, Len, out byte[] answ);
+                if (answ != null)
+                {
+                    res = ToUTCTime(answ).ToLocalTime();
+                    ChangeStatus(StringsTable.GetTimeOK);
+                }
             }
-            finally
-            {
-                ChangeStatus(StringsTable.GetTimeOK);
-            }
-            if (answ != null)
-            {
-                res = ToUTCTime(answ).ToLocalTime();
-            }
+            finally { }
             return res;
         }
 
@@ -290,21 +266,18 @@ namespace OblikControl
             const byte Segment = 66;
             const UInt16 Offset = 0;
             const byte Len = 3;
-            byte[] answ = null;
             NetworkConfig res = default;
             try
             {
-                SegmentRead(Segment, Offset, Len, out answ);
-            }
-            finally
-            {
+                SegmentRead(Segment, Offset, Len, out byte[] answ);
                 if (answ != null)
                 {
                     res.Addr = answ[0];
                     res.Divisor = ToUint16(ArrayPart(answ, 1, 2));
+                    ChangeStatus(StringsTable.GetNetOk);
                 }
             }
-            ChangeStatus(StringsTable.GetNetOk);
+            finally { }
             return res;
         }
 
@@ -320,17 +293,15 @@ namespace OblikControl
             try
             {
                 SegmentWrite(Segment, Offset, Buf);
-            }
-            finally
-            {
                 //Меняем настройку сети класса в соответствии с новой настройкой
                 if (_ConParams.Address != 0)
                 {
                     _ConParams.Address = nc.Addr;
                     _ConParams.Baudrate = 115200 / nc.Divisor;
+                    ChangeStatus(StringsTable.SetNetOK);
                 }
-                ChangeStatus(StringsTable.SetNetOK);
             }
+            finally { }
         }
 
         /// <summary>
@@ -365,15 +336,13 @@ namespace OblikControl
             try
             {
                 SegmentWrite(Segment, Offset, pwdarray);
-            }
-            finally
-            {
                 ChangeStatus(StringsTable.PwdSetOK);
                 if (_ConParams.AccessLevel == accessLevel)
                 {
                     _ConParams.Password = password;
                 }
             }
+            finally { }
         }
 
 
@@ -391,14 +360,12 @@ namespace OblikControl
             try
             {
                 SegmentRead(segment, offset, len, out QueryResult);
-            }
-            finally
-            {
                 if (QueryResult != null)
                 {
                     _CalcUnits = ToCalcUnits(QueryResult);
                 }
             }
+            finally { }
         }
 
         /// <summary>

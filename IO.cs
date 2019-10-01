@@ -207,20 +207,21 @@ namespace OblikControl
         /// <returns>Успех операции</returns>
         public void SegmentRead(byte Segment, UInt16 Offset, byte Len, out byte[] Data)
         {
-            byte[] answer = null;
+            byte[] answer;
+            string message;
+            bool check;
+            Data = null;
             byte[] Query = PerformFrame(Segment, Offset, Len, Access.Read);
             try
             {
                 OblikQuery(Query, out answer);
+                check = CheckAnswer(answer, out message);
+                if (check) { Data = ArrayPart(answer, 4, answer.Length - 5); }
             }
             finally
             {
             }
-            if (!CheckAnswer(answer, out string message))
-            {
-                throw new OblikException(message);
-            }
-            Data = ArrayPart(answer, 4, answer.Length - 5);
+            if (!check) { throw new OblikException(message); }
         }
 
         /// <summary>
@@ -233,6 +234,8 @@ namespace OblikControl
         public void SegmentWrite(byte Segment, UInt16 Offset, byte[] Data)
         {
             byte[] answer;
+            bool check;
+            string message;
             if (Data == null)
             {
                 throw new OblikException(StringsTable.DataError);
@@ -241,14 +244,12 @@ namespace OblikControl
             try
             {
                 OblikQuery(Query, out answer);
+                check = CheckAnswer(answer, out message);
             }
             finally
             {
             }
-            if (!CheckAnswer(answer, out string message))
-            {
-                throw new OblikException(message);
-            }
+            if (!check) { throw new OblikException(message); }
         }
 
 
