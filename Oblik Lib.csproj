@@ -42,6 +42,9 @@
     <CodeAnalysisRuleSet>Oblik Lib.ruleset</CodeAnalysisRuleSet>
     <DocumentationFile>bin\Release\Oblik.xml</DocumentationFile>
   </PropertyGroup>
+  <PropertyGroup>
+    <AutoGenerateBindingRedirects>false</AutoGenerateBindingRedirects>
+  </PropertyGroup>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Core" />
