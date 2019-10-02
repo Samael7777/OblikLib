@@ -41,12 +41,12 @@ namespace OblikControl
             _ConParams.Baudrate = (Connection.Baudrate != null) ? Connection.Baudrate : 9600;
             _ConParams.Password = Connection.Password;
             _ConParams.Port = (Connection.Port != null) ? Connection.Port : 1;
-            _ConParams.Repeats = (Connection.Repeats != null) ? Connection.Repeats : 5;
-            _ConParams.Timeout = (Connection.Timeout != null) ? Connection.Timeout : 2000;
+            _ConParams.Repeats = (Connection.Repeats != null) ? Connection.Repeats : 2;
+            _ConParams.Timeout = (Connection.Timeout != null) ? Connection.Timeout : 1000;
         }
 
         /// <summary>
-        /// Конструктор класса
+        /// Конструктор класса (соединение на скорости 9600 бод, пользователь Энергонадзор, без пароля, таймаут соединения 1000 мс, 2 повтора)
         /// </summary>
         /// <param name="Port">Номер COM порта</param>
         /// <param name="Address">Адрес счетчика в сети RS-485</param>
@@ -58,11 +58,15 @@ namespace OblikControl
                 Baudrate = 9600,
                 Password = "",
                 Port = Port,
-                Repeats = 5,
-                Timeout = 2000
+                Repeats = 2,
+                Timeout = 1000
             })
         { }
 
+        /// <summary>
+        /// Возвращает тип счетчика и версию его ПО
+        /// </summary>
+        /// <returns>Тип счетчика и версия его ПО</returns>
         public override string ToString()
         {
             string text = string.Empty;

@@ -5,6 +5,7 @@ namespace OblikControl
     public partial class Oblik
     {
         //Общие свойства
+
         /// <summary>
         /// Параметры соединения
         /// </summary>

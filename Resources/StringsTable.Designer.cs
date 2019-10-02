@@ -61,6 +61,15 @@ namespace OblikControl.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Ошибка очистки суточного графика.
+        /// </summary>
+        public static string CleanDayGraphErr {
+            get {
+                return ResourceManager.GetString("CleanDayGraphErr", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Очистка суточного графика успешна.
         /// </summary>
         public static string CleanDGOK {
@@ -75,6 +84,15 @@ namespace OblikControl.Resources {
         public static string CleanELOK {
             get {
                 return ResourceManager.GetString("CleanELOK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Ошибка очистки журнала событий.
+        /// </summary>
+        public static string CleanEventsLogErr {
+            get {
+                return ResourceManager.GetString("CleanEventsLogErr", resourceCulture);
             }
         }
         
@@ -142,11 +160,38 @@ namespace OblikControl.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Ошибка получения параметров вычислений.
+        /// </summary>
+        public static string GetCalcUnitsErr {
+            get {
+                return ResourceManager.GetString("GetCalcUnitsErr", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Ошибка получения текущих значений.
+        /// </summary>
+        public static string GetCurrentValuesErr {
+            get {
+                return ResourceManager.GetString("GetCurrentValuesErr", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Текушие значения получены успешно.
         /// </summary>
         public static string GetCVOK {
             get {
                 return ResourceManager.GetString("GetCVOK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Ошибка получения суточного графика.
+        /// </summary>
+        public static string GetDayGraphListErr {
+            get {
+                return ResourceManager.GetString("GetDayGraphListErr", resourceCulture);
             }
         }
         
@@ -187,6 +232,15 @@ namespace OblikControl.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Ошибка получения версии прошивки.
+        /// </summary>
+        public static string GetFWVersionErr {
+            get {
+                return ResourceManager.GetString("GetFWVersionErr", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Настройки сети получены успешно.
         /// </summary>
         public static string GetNetOk {
@@ -196,11 +250,38 @@ namespace OblikControl.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Ошибка получения настроек сети.
+        /// </summary>
+        public static string GetNetworkConfigErr {
+            get {
+                return ResourceManager.GetString("GetNetworkConfigErr", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Карта сегментов получена успешно.
         /// </summary>
         public static string GetSegMapOK {
             get {
                 return ResourceManager.GetString("GetSegMapOK", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Ошибка получения карты сегментов.
+        /// </summary>
+        public static string GetSegmentsMapErr {
+            get {
+                return ResourceManager.GetString("GetSegmentsMapErr", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Ошибка получения показаний времени счетчика.
+        /// </summary>
+        public static string GetTimeErr {
+            get {
+                return ResourceManager.GetString("GetTimeErr", resourceCulture);
             }
         }
         
@@ -448,6 +529,24 @@ namespace OblikControl.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Ошибка установки параметров вычислений.
+        /// </summary>
+        public static string SetCalcUnitsErr {
+            get {
+                return ResourceManager.GetString("SetCalcUnitsErr", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Ошибка установки времени.
+        /// </summary>
+        public static string SetCurrentTimeErr {
+            get {
+                return ResourceManager.GetString("SetCurrentTimeErr", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Текущее время установлено.
         /// </summary>
         public static string SetCurrTimeOK {
@@ -466,11 +565,74 @@ namespace OblikControl.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Ошибка установки настроек сети.
+        /// </summary>
+        public static string SetNetworkConfigErr {
+            get {
+                return ResourceManager.GetString("SetNetworkConfigErr", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Ошибка установки пароля пользователю.
+        /// </summary>
+        public static string SetPasswordErr {
+            get {
+                return ResourceManager.GetString("SetPasswordErr", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Таймаут.
         /// </summary>
         public static string Timeout {
             get {
                 return ResourceManager.GetString("Timeout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Администратор.
+        /// </summary>
+        public static string UsrAdmin {
+            get {
+                return ResourceManager.GetString("UsrAdmin", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Энергонадзор.
+        /// </summary>
+        public static string UsrEnrego {
+            get {
+                return ResourceManager.GetString("UsrEnrego", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Системный пользователь.
+        /// </summary>
+        public static string UsrSystem {
+            get {
+                return ResourceManager.GetString("UsrSystem", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Неизвестный пользователь.
+        /// </summary>
+        public static string UsrUnk {
+            get {
+                return ResourceManager.GetString("UsrUnk", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Пользователь.
+        /// </summary>
+        public static string UsrUsr {
+            get {
+                return ResourceManager.GetString("UsrUsr", resourceCulture);
             }
         }
     }

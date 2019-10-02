@@ -3,6 +3,9 @@ using System.Runtime.Serialization;
 
 namespace OblikControl
 {
+    /// <summary>
+    /// Исключение операций ввода/вывода
+    /// </summary>
     [Serializable]
     public class OblikIOException : Exception, ISerializable
     {
@@ -11,6 +14,9 @@ namespace OblikControl
         public OblikIOException(string message, Exception innerException) : base(message, innerException) { }
         protected OblikIOException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
+    /// <summary>
+    /// Исключение операций с сегментами
+    /// </summary>
     [Serializable]
     public class OblikSegException : Exception, ISerializable
     {
@@ -20,6 +26,9 @@ namespace OblikControl
         protected OblikSegException(SerializationInfo info, StreamingContext context) : base(info, context) { }
     }
 
+    /// <summary>
+    /// Исключение команд счетчика
+    /// </summary>
     [Serializable]
     public class OblikCmdException : Exception, ISerializable
     {

@@ -109,6 +109,10 @@ namespace OblikControl
                     com.DiscardInBuffer();                                                                  //очистка буфера приема
                     try
                     {
+                        if (Query == null)
+                        {
+                            throw new ArgumentNullException(paramName: nameof(Query));
+                        }
                         com.Write(Query, 0, Query.Length);
                     }
                     catch (Exception e)

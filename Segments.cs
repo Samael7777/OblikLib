@@ -29,7 +29,7 @@ namespace OblikControl
             catch (OblikSegException)
             {
                 string mes = StringsTable.GetDayGraphRecsErr;
-                ChangeSegStatus(mes);
+                ChangeCmdStatus(mes);
                 throw new OblikCmdException(mes);
             }
             return res;
@@ -50,7 +50,12 @@ namespace OblikControl
                 SegmentWrite(segment, offset, cmd);
                 ChangeCmdStatus(StringsTable.CleanDGOK);
             }
-            finally { }
+            catch (OblikSegException)
+            {
+                string mes = StringsTable.CleanDayGraphErr;
+                ChangeCmdStatus(mes);
+                throw new OblikCmdException(mes);
+            }
         }
 
         /// <summary>
@@ -68,7 +73,12 @@ namespace OblikControl
                 SegmentWrite(segment, offset, cmd);
                 ChangeCmdStatus(StringsTable.CleanELOK);
             }
-            finally { }
+            catch (OblikSegException)
+            {
+                string mes = StringsTable.CleanEventsLogErr;
+                ChangeCmdStatus(mes);
+                throw new OblikCmdException(mes);
+            }
         }
 
         /// <summary>
@@ -86,7 +96,12 @@ namespace OblikControl
                 SegmentWrite(segment, offset, Buf);
                 ChangeCmdStatus(StringsTable.SetCurrTimeOK);
             }
-            finally { }
+            catch (OblikSegException)
+            {
+                string mes = StringsTable.SetCurrentTimeErr;
+                ChangeCmdStatus(mes);
+                throw new OblikCmdException(mes);
+            }
         }
 
         /// <summary>
@@ -139,7 +154,12 @@ namespace OblikControl
                 }
                 ChangeCmdStatus(StringsTable.GetDayGraphListOK);
             }
-            finally { }
+            catch (OblikSegException)
+            {
+                string mes = StringsTable.GetDayGraphListErr;
+                ChangeCmdStatus(mes);
+                throw new OblikCmdException(mes);
+            }
             return res;
         }
         /// <summary>
@@ -157,7 +177,12 @@ namespace OblikControl
                     res = GetDayGraphList(recs, 0);
                 }
             }
-            finally { }
+            catch (OblikSegException)
+            {
+                string mes = StringsTable.GetDayGraphListErr;
+                ChangeCmdStatus(mes);
+                throw new OblikCmdException(mes);
+            }
             return res;
         }
 
@@ -181,7 +206,12 @@ namespace OblikControl
                 }
                 ChangeCmdStatus(StringsTable.GetFWVerOK);
             }
-            finally { }
+            catch (OblikSegException)
+            {
+                string mes = StringsTable.GetFWVersionErr;
+                ChangeCmdStatus(mes);
+                throw new OblikCmdException(mes);
+            }
         }
 
         /// <summary>
@@ -194,17 +224,18 @@ namespace OblikControl
             const byte segment = 36;
             const UInt16 offset = 0;
             const byte len = 33;
-            byte[] QueryResult = null;
             try
             {
-                SegmentRead(segment, offset, len, out QueryResult);
-                if (QueryResult != null)
-                {
-                    Values = ToCurrentValues(QueryResult);
-                }
+                SegmentRead(segment, offset, len, out byte[] QueryResult);
+                Values = ToCurrentValues(QueryResult);
                 ChangeCmdStatus(StringsTable.GetCVOK);
             }
-            finally { }
+            catch (OblikSegException)
+            {
+                string mes = StringsTable.GetCurrentValuesErr;
+                ChangeCmdStatus(mes);
+                throw new OblikCmdException(mes);
+            }
         }
 
         /// <summary>
@@ -235,7 +266,12 @@ namespace OblikControl
                 }
                 ChangeCmdStatus(StringsTable.GetSegMapOK);
             }
-            finally { }
+            catch (OblikSegException)
+            {
+                string mes = StringsTable.GetCurrentValuesErr;
+                ChangeCmdStatus(mes);
+                throw new OblikCmdException(mes);
+            }
             return res;
         }
 
@@ -248,17 +284,19 @@ namespace OblikControl
             const byte Segment = 64;
             const UInt16 Offset = 0;
             const byte Len = sizeof(UInt32);
-            DateTime res = default;
+            DateTime res;
             try
             {
                 SegmentRead(Segment, Offset, Len, out byte[] answ);
-                if (answ != null)
-                {
-                    res = ToUTCTime(answ).ToLocalTime();
-                    ChangeCmdStatus(StringsTable.GetTimeOK);
-                }
+                res = ToUTCTime(answ).ToLocalTime();
+                ChangeCmdStatus(StringsTable.GetTimeOK);
             }
-            finally { }
+            catch (OblikSegException)
+            {
+                string mes = StringsTable.GetTimeErr;
+                ChangeCmdStatus(mes);
+                throw new OblikCmdException(mes);
+            }
             return res;
         }
 
@@ -275,14 +313,16 @@ namespace OblikControl
             try
             {
                 SegmentRead(Segment, Offset, Len, out byte[] answ);
-                if (answ != null)
-                {
-                    res.Addr = answ[0];
-                    res.Divisor = ToUint16(ArrayPart(answ, 1, 2));
-                    ChangeCmdStatus(StringsTable.GetNetOk);
-                }
+                res.Addr = answ[0];
+                res.Divisor = ToUint16(ArrayPart(answ, 1, 2));
+                ChangeCmdStatus(StringsTable.GetNetOk);
             }
-            finally { }
+            catch (OblikSegException)
+            {
+                string mes = StringsTable.GetNetworkConfigErr;
+                ChangeCmdStatus(mes);
+                throw new OblikCmdException(mes);
+            }
             return res;
         }
 
@@ -306,7 +346,12 @@ namespace OblikControl
                     ChangeCmdStatus(StringsTable.SetNetOK);
                 }
             }
-            finally { }
+            catch (OblikSegException)
+            {
+                string mes = StringsTable.SetNetworkConfigErr;
+                ChangeCmdStatus(mes);
+                throw new OblikCmdException(mes);
+            }
         }
 
         /// <summary>
@@ -347,10 +392,35 @@ namespace OblikControl
                     _ConParams.Password = password;
                 }
             }
-            finally { }
+            catch (OblikSegException)
+            {
+                string mes = StringsTable.SetPasswordErr + $" {GetUserName(accessLevel)}";
+                ChangeCmdStatus(mes);
+                throw new OblikCmdException(mes);
+            }
         }
 
-
+        /// <summary>
+        /// Возвращает имя пользователя по уровню доступа
+        /// </summary>
+        /// <param name="al">Уровень доступа</param>
+        /// <returns>Имя пользователя</returns>
+        public static string GetUserName(AccessLevel al)
+        {
+            switch (al)
+            {
+                case AccessLevel.Admin:
+                    return StringsTable.UsrAdmin;
+                case AccessLevel.Energo:
+                    return StringsTable.UsrEnrego;
+                case AccessLevel.System:
+                    return StringsTable.UsrSystem;
+                case AccessLevel.User:
+                    return StringsTable.UsrUsr;
+                default:
+                    return StringsTable.UsrUnk;
+            }
+        }
 
         //------------Методы для внутреннего использования-----------------------------------
         /// <summary>
@@ -361,16 +431,17 @@ namespace OblikControl
             byte segment = 56;                                      //Сегмент чтения параметров вычислений
             UInt16 offset = 0;
             byte len = 57;
-            byte[] QueryResult = null;
             try
             {
-                SegmentRead(segment, offset, len, out QueryResult);
-                if (QueryResult != null)
-                {
-                    _CalcUnits = ToCalcUnits(QueryResult);
-                }
+                SegmentRead(segment, offset, len, out byte[] QueryResult);
+                _CalcUnits = ToCalcUnits(QueryResult);
             }
-            finally { }
+            catch (OblikSegException)
+            {
+                string mes = StringsTable.GetCalcUnitsErr;
+                ChangeCmdStatus(mes);
+                throw new OblikCmdException(mes);
+            }
         }
 
         /// <summary>
@@ -386,7 +457,14 @@ namespace OblikControl
             {
                 SegmentWrite(segment, offset, data);
             }
-            finally { }
+            catch (OblikSegException)
+            {
+                string mes = StringsTable.SetCalcUnitsErr;
+                ChangeCmdStatus(mes);
+                throw new OblikCmdException(mes);
+            }
         }
+
+       
     }
 }

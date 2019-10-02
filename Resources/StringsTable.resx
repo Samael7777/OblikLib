@@ -117,11 +117,17 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
+  <data name="CleanDayGraphErr" xml:space="preserve">
+    <value>Ошибка очистки суточного графика</value>
+  </data>
   <data name="CleanDGOK" xml:space="preserve">
     <value>Очистка суточного графика успешна</value>
   </data>
   <data name="CleanELOK" xml:space="preserve">
     <value>Очистка журнала событий успешна</value>
+  </data>
+  <data name="CleanEventsLogErr" xml:space="preserve">
+    <value>Ошибка очистки журнала событий</value>
   </data>
   <data name="CntrType1" xml:space="preserve">
     <value>ЛО-3Tx-xMx</value>
@@ -144,8 +150,17 @@
   <data name="Error" xml:space="preserve">
     <value>Ошибка</value>
   </data>
+  <data name="GetCalcUnitsErr" xml:space="preserve">
+    <value>Ошибка получения параметров вычислений</value>
+  </data>
+  <data name="GetCurrentValuesErr" xml:space="preserve">
+    <value>Ошибка получения текущих значений</value>
+  </data>
   <data name="GetCVOK" xml:space="preserve">
     <value>Текушие значения получены успешно</value>
+  </data>
+  <data name="GetDayGraphListErr" xml:space="preserve">
+    <value>Ошибка получения суточного графика</value>
   </data>
   <data name="GetDayGraphListOK" xml:space="preserve">
     <value>Суточный график получен успешно</value>
@@ -159,11 +174,23 @@
   <data name="GetFWVerOK" xml:space="preserve">
     <value>Версия ПО получена успешно</value>
   </data>
+  <data name="GetFWVersionErr" xml:space="preserve">
+    <value>Ошибка получения версии прошивки</value>
+  </data>
   <data name="GetNetOk" xml:space="preserve">
     <value>Настройки сети получены успешно</value>
   </data>
+  <data name="GetNetworkConfigErr" xml:space="preserve">
+    <value>Ошибка получения настроек сети</value>
+  </data>
   <data name="GetSegMapOK" xml:space="preserve">
     <value>Карта сегментов получена успешно</value>
+  </data>
+  <data name="GetSegmentsMapErr" xml:space="preserve">
+    <value>Ошибка получения карты сегментов</value>
+  </data>
+  <data name="GetTimeErr" xml:space="preserve">
+    <value>Ошибка получения показаний времени счетчика</value>
   </data>
   <data name="GetTimeOK" xml:space="preserve">
     <value>Время счетчика получено успешно</value>
@@ -246,13 +273,40 @@
   <data name="SendReq" xml:space="preserve">
     <value>Отправка запроса...</value>
   </data>
+  <data name="SetCalcUnitsErr" xml:space="preserve">
+    <value>Ошибка установки параметров вычислений</value>
+  </data>
+  <data name="SetCurrentTimeErr" xml:space="preserve">
+    <value>Ошибка установки времени</value>
+  </data>
   <data name="SetCurrTimeOK" xml:space="preserve">
     <value>Текущее время установлено</value>
   </data>
   <data name="SetNetOK" xml:space="preserve">
     <value>Настройки сети установлены успешно</value>
   </data>
+  <data name="SetNetworkConfigErr" xml:space="preserve">
+    <value>Ошибка установки настроек сети</value>
+  </data>
+  <data name="SetPasswordErr" xml:space="preserve">
+    <value>Ошибка установки пароля пользователю</value>
+  </data>
   <data name="Timeout" xml:space="preserve">
     <value>Таймаут</value>
+  </data>
+  <data name="UsrAdmin" xml:space="preserve">
+    <value>Администратор</value>
+  </data>
+  <data name="UsrEnrego" xml:space="preserve">
+    <value>Энергонадзор</value>
+  </data>
+  <data name="UsrSystem" xml:space="preserve">
+    <value>Системный пользователь</value>
+  </data>
+  <data name="UsrUnk" xml:space="preserve">
+    <value>Неизвестный пользователь</value>
+  </data>
+  <data name="UsrUsr" xml:space="preserve">
+    <value>Пользователь</value>
   </data>
 </root>
