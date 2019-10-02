@@ -7,9 +7,20 @@ namespace OblikControl
     //Классы событий
 
     /// <summary>
+    /// Общий класс событий Облик
+    /// </summary>
+    public class OblikEventArgs : EventArgs
+    {
+        /// <summary>
+        /// Сообщение
+        /// </summary>
+        public string Message { get; set; }
+    }
+
+    /// <summary>
     /// Класс аргументов событий прогресса данных
     /// </summary>
-    public class ProgressEventArgs : EventArgs
+    public class OblikProgressEventArgs : OblikEventArgs
     {
         /// <summary>
         /// Прогресс в процентах
@@ -20,33 +31,16 @@ namespace OblikControl
     /// <summary>
     /// Класс аргументов событий изменения статуса команд
     /// </summary>
-    public class CmdStatusChangeEventArgs : EventArgs
-    {
-        /// <summary>
-        /// Сообщение
-        /// </summary>
-        public string Message { get; set; }
-    }
+    public class OblikCmdStatusChangeEventArgs : OblikEventArgs { }
     /// <summary>
     /// Класс аргументов событий изменения статуса операций с сегментами
     /// </summary>
-    public class SegStatusChangeEventArgs : EventArgs
-    {
-        /// <summary>
-        /// Сообщение
-        /// </summary>
-        public string Message { get; set; }
-    }
+    public class OblikSegStatusChangeEventArgs : OblikEventArgs { }
     /// <summary>
     /// Класс аргументов событий изменения статуса операций ввода/вывода
     /// </summary>
-    public class IOStatusChangeEventArgs : EventArgs
-    {
-        /// <summary>
-        /// Сообщение
-        /// </summary>
-        public string Message { get; set; }
-    }
+    public class OblikIOStatusChangeEventArgs : OblikEventArgs { }
+
     public partial class Oblik
     {
         /// <summary>
@@ -54,25 +48,25 @@ namespace OblikControl
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public delegate void ProgressEventHandler(object sender, ProgressEventArgs e);
+        public delegate void ProgressEventHandler(object sender, OblikProgressEventArgs e);
         /// <summary>
         /// Делегат события изменения статуса команд
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public delegate void CmdStatusChangeEventHandler(object sender, CmdStatusChangeEventArgs e);
+        public delegate void CmdStatusChangeEventHandler(object sender, OblikCmdStatusChangeEventArgs e);
         /// <summary>
         /// Делегат события изменения статуса операций с сегментами
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public delegate void SegStatusChangeEventHandler(object sender, SegStatusChangeEventArgs e);
+        public delegate void SegStatusChangeEventHandler(object sender, OblikSegStatusChangeEventArgs e);
         /// <summary>
         /// Делегат события изменения статуса операций ввода/вывода
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="e"></param>
-        public delegate void IOStatusChangeEventHandler(object sender, IOStatusChangeEventArgs e);
+        public delegate void IOStatusChangeEventHandler(object sender, OblikIOStatusChangeEventArgs e);
         
         /// <summary>
         /// Событие прогресса данных
@@ -99,7 +93,7 @@ namespace OblikControl
         /// <param name="message">Сообщение</param>
         private void ChangeCmdStatus(string message)
         {
-            CmdStatusChangeEventArgs args = new CmdStatusChangeEventArgs
+            OblikCmdStatusChangeEventArgs args = new OblikCmdStatusChangeEventArgs
             {
                 Message = message
             };
@@ -111,7 +105,7 @@ namespace OblikControl
         /// <param name="message">Сообщение</param>
         private void ChangeSegStatus(string message)
         {
-            SegStatusChangeEventArgs args = new SegStatusChangeEventArgs
+            OblikSegStatusChangeEventArgs args = new OblikSegStatusChangeEventArgs
             {
                 Message = message
             };
@@ -123,7 +117,7 @@ namespace OblikControl
         /// <param name="message">Сообщение</param>
         private void ChangeIOStatus(string message)
         {
-            IOStatusChangeEventArgs args = new IOStatusChangeEventArgs
+            OblikIOStatusChangeEventArgs args = new OblikIOStatusChangeEventArgs
             {
                 Message = message
             };
@@ -136,7 +130,7 @@ namespace OblikControl
         /// <param name="progress">Прогресс в процентах</param>
         private void SetProgress(float progress)
         {
-            ProgressEventArgs args = new ProgressEventArgs
+            OblikProgressEventArgs args = new OblikProgressEventArgs
             {
                 Progress = progress
             };
