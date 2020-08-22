@@ -15,7 +15,7 @@ namespace OblikControl
         /// </summary>
         /// <param name="array"></param>
         /// <returns>Число UInt32</returns>
-        private static UInt32 ToUint32(byte[] array)
+        private UInt32 ToUint32(byte[] array)
         {
             Array.Reverse(array);
             MemoryStream stream = null;
@@ -42,7 +42,7 @@ namespace OblikControl
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        private static byte[] UInt32ToByte(UInt32 data)
+        private byte[] UInt32ToByte(UInt32 data)
         {
             byte[] res = new byte[sizeof(UInt32)];
             MemoryStream stream = null;
@@ -71,7 +71,7 @@ namespace OblikControl
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        private static float ToFloat(byte[] array)
+        private float ToFloat(byte[] array)
         {
             Array.Reverse(array);
             MemoryStream stream = null;
@@ -98,7 +98,7 @@ namespace OblikControl
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        private static byte[] FloatToByte(float data)
+        private byte[] FloatToByte(float data)
         {
             byte[] res = new byte[sizeof(float)];
             MemoryStream stream = null;
@@ -127,7 +127,7 @@ namespace OblikControl
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        private static UInt16 ToUint16(byte[] array)
+        private UInt16 ToUint16(byte[] array)
         {
             Array.Reverse(array);
             MemoryStream stream = null;
@@ -154,7 +154,7 @@ namespace OblikControl
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
-        private static byte[] UInt16ToByte(UInt16 data)
+        private byte[] UInt16ToByte(UInt16 data)
         {
             byte[] res = new byte[2];
             res[0] = (byte)((data & 0xFF00) >> 8);
@@ -167,7 +167,7 @@ namespace OblikControl
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        private static DateTime ToUTCTime(byte[] array)
+        private DateTime ToUTCTime(byte[] array)
         {
             UInt32 _ctime;  //Время по стандарту t_time
             DateTime BaseTime;
@@ -181,7 +181,7 @@ namespace OblikControl
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        private static float ToUminiflo(byte[] array)
+        private float ToUminiflo(byte[] array)
         {
             UInt16 _data = ToUint16(array);
             UInt16 man, exp;
@@ -197,7 +197,7 @@ namespace OblikControl
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        private static float ToSminiflo(byte[] array)
+        private float ToSminiflo(byte[] array)
         {
             UInt16 _data = ToUint16(array);
             UInt16 sig = (UInt16)(_data & (UInt16)1);                                  //Знак - бит 0
@@ -211,7 +211,7 @@ namespace OblikControl
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        private static DayGraphRow ToDayGraphRow(byte[] array)
+        private DayGraphRow ToDayGraphRow(byte[] array)
         {
             DayGraphRow res = new DayGraphRow();
             int index = 0;
@@ -244,7 +244,7 @@ namespace OblikControl
         /// </summary>
         /// <param name="Date"></param>
         /// <returns></returns>
-        private static byte[] ToTime(DateTime Date)
+        private byte[] ToTime(DateTime Date)
         {
             DateTime BaseTime = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc);      //Базовая точка времени 01.01.1970 00:00 GMT
             UInt32 Time = (UInt32)(Date - BaseTime).TotalSeconds;
@@ -256,7 +256,7 @@ namespace OblikControl
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        private static CalcUnitsStruct ToCalcUnits(byte[] array)
+        private CalcUnitsStruct ToCalcUnits(byte[] array)
         {
             CalcUnitsStruct res = new CalcUnitsStruct();
 
@@ -323,7 +323,7 @@ namespace OblikControl
         /// </summary>
         /// <param name="CalcUnits"></param>
         /// <returns></returns>
-        private static byte[] CalcUnitsToByte(CalcUnitsStruct CalcUnits)
+        private byte[] CalcUnitsToByte(CalcUnitsStruct CalcUnits)
         {
             byte[] res = new byte[57];
             int index = 0;
@@ -393,7 +393,7 @@ namespace OblikControl
         /// </summary>
         /// <param name="array"></param>
         /// <returns></returns>
-        private static CurrentValues ToCurrentValues(byte[] array)
+        private CurrentValues ToCurrentValues(byte[] array)
         {
             CurrentValues res = new CurrentValues();
 
@@ -435,7 +435,7 @@ namespace OblikControl
         /// </summary>
         /// <param name="array">Исходный массив</param>
         /// <returns></returns>
-        private static SegmentsMapRec ToSegmentsMapRec(byte[] array)
+        private SegmentsMapRec ToSegmentsMapRec(byte[] array)
         {
             SegmentsMapRec res = new SegmentsMapRec
             {
@@ -454,7 +454,7 @@ namespace OblikControl
         /// <param name="StartIndex">Начальный индекс</param>
         /// <param name="Lenght">Длина</param>
         /// <returns>Массив байт</returns>
-        private static byte[] ArrayPart(byte[] array, int StartIndex, int Lenght)
+        private byte[] ArrayPart(byte[] array, int StartIndex, int Lenght)
         {
             byte[] res = new byte[Lenght];
             Array.Copy(array, StartIndex, res, 0, Lenght);
@@ -466,7 +466,7 @@ namespace OblikControl
         /// </summary>
         /// <param name="nc">Структура сетевых настроек</param>
         /// <returns>Массив байт</returns>
-        private static byte[] NetworkConfigToByte(NetworkConfig nc)
+        private byte[] NetworkConfigToByte(NetworkConfig nc)
         {
             byte[] res = new byte[3];
             res[0] = nc.Addr;

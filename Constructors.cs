@@ -1,6 +1,6 @@
 ﻿//Конструкторы класса
-using OblikControl.Resources;
 using System.Resources;
+using OblikControl.Resources;
 
 [assembly: NeutralResourcesLanguageAttribute("ru")]
 
